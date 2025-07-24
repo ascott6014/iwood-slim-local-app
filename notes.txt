@@ -1,0 +1,10 @@
+Add a feature to get all customer orders/repairs/installs and be able to select and modify
+Add a feature to delete a customer
+change all the costs to estimates
+
+add ability to inset discount percentages for orders, repairs, or installs
+
+create a view that generates the final price for repair that grabs information from the repair table and repair_item table 
+create a view that generates the final price for install that grabs information from the install table and install_items table
+add feature to dynamically add items to order that inserts into order items, and generates a total price excluding tax
+

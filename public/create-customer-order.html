@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Create Order for New Customer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/previewAndSubmit.js" defer></script>
+</head>
+<body>
+  <div class="page-container">
+    <div class="form-wrapper">
+      <h2>Create Order for New Customer</h2>
+
+      <form id="mainForm" action="/orders/create-customer-order" method="POST">
+        <div class="form-columns">
+
+          <!-- Left Column: Customer Info -->
+          <div class="form-section">
+            <h3>Customer Info</h3>
+            <div class="form-row"><label for="first_name">First Name:</label><input name="first_name" id="first_name" required /></div>
+            <div class="form-row"><label for="last_name">Last Name:</label><input name="last_name" id="last_name" required /></div>
+            <div class="form-row"><label for="address">Address:</label><input name="address" id="address"/></div>
+            <div class="form-row"><label for="city">City:</label><input name="city" id="city"/></div>
+            <div class="form-row"><label for="state">State:</label><input name="state" id="state" maxlength="2"/></div>
+            <div class="form-row"><label for="zip">ZIP Code:</label><input name="zip" id="zip"/></div>
+            <div class="form-row"><label for="phone">Phone:</label><input name="phone" id="phone" required /></div>
+            <div class="form-row"><label for="email">Email:</label><input name="email" id="email" type="email"/></div>
+            <div class="form-row"><label for="notes">Customer Notes:</label><textarea name="notes" id="notes"></textarea></div>
+          </div>
+
+          <!-- Right Column: Order Info -->
+          <div class="form-section">
+            <h3>Order Info</h3>
+            <div class="form-row"><label for="order_date">Order Date:</label><input name="order_date" id="order_date" type="date" required /></div>
+            <div class="form-row"><label for="order_total">Order Total ($):</label><input name="order_total" id="order_total" type="number" step="0.01" required /></div>
+          </div>
+
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="form-actions">
+          <button type="reset">Clear Form</button>
+          <button type="button" id="previewBtn">Review & Print</button>
+          <button type="button" onclick="location.href='index.html'">⬅️ Back to Home</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
+
+
+
+
