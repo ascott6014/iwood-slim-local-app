@@ -8,3 +8,19 @@ create a view that generates the final price for repair that grabs information f
 create a view that generates the final price for install that grabs information from the install table and install_items table
 add feature to dynamically add items to order that inserts into order items, and generates a total price excluding tax
 
+endpoints...
+add customer
+get customers
+update customer
+
+add repair
+get repairs
+update repair
+
+add install
+get install
+update install
+
+add order
+get order
+update order;

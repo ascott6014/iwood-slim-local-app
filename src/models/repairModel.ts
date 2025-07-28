@@ -1,14 +1,14 @@
 import { db } from "../dataSource";
-import { CustomerRepairInput } from "../types/repairTypes";
-
-function normalizeDate(datetimeInput: string): string {
-  return datetimeInput.replace('T', ' ') + ':00'; // Ensures 'YYYY-MM-DD HH:MM:SS'
-}
 
 
-async function createCustomerAndRepair(data: CustomerRepairInput) {
+// function normalizeDate(datetimeInput: string): string {
+//   return datetimeInput.replace('T', ' ') + ':00'; // Ensures 'YYYY-MM-DD HH:MM:SS'
+// }
+
+
+async function createCustomerAndRepair(data: NewCustomerRepairInput) {
   const [rows] = await db.query(
-    'CALL CreateCustomerAndRepair(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    'CALL AddCustomerAndRepair(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     [
       data.first_name,
       data.last_name,
@@ -18,33 +18,30 @@ async function createCustomerAndRepair(data: CustomerRepairInput) {
       data.zip,
       data.phone,
       data.email,
-      data.notes,
       data.items_brought,
       data.problem,
       data.solution,
-      data.repair_cost,
+      data.estimate,
       data.status,
-      data.notes_repair,
-      normalizeDate(data.start_date),
-      normalizeDate(data.end_date)
+      data.notes,
+      data.drop_off_date
     ]
   );
   return rows;
 }
 
-async function createRepairForCustomer(data: any) {
+async function createRepairForCustomer(data: CustomerRepairInput) {
   const [rows] = await db.query(
-    'CALL CreateRepairForCustomer(?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    'CALL AddRepairForCustomer(?, ?, ?, ?, ?, ?, ?, ?)',
     [
       data.customer_id,
       data.items_brought,
       data.problem,
       data.solution,
-      data.repair_cost,
+      data.estimate,
       data.status,
       data.notes,
-      normalizeDate(data.start_date),
-      normalizeDate(data.end_date),
+      data.drop_off_date
     ]
   );
   return rows;

@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { parseDatabaseError } from '../utils/db-utils';
 import { createCustomerAndRepair, createRepairForCustomer } from '../models/repairModel';
 
 
@@ -18,6 +19,8 @@ export async function handleRepairForCustomer(req: Request, res: Response) {
     const result = await createRepairForCustomer(req.body);
     res.status(200).json({ message: 'Repair created for existing customer', result });
   } catch (error) {
-    res.status(500).json({ message: 'Error creating repair', error });
+    console.error(error);
+    const databaseErrorMessage = parseDatabaseError(error);
+    res.status(500).json({ message: 'Error creating repair', databaseErrorMessage });
   }
 }

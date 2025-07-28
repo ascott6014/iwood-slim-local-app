@@ -1,4 +1,4 @@
-export interface CustomerRepairInput {
+type  NewCustomerRepairInput = {
   first_name: string;
   last_name: string;
   address: string;
@@ -7,13 +7,24 @@ export interface CustomerRepairInput {
   zip: string;
   phone: string;
   email: string;
-  notes: string | null;
   items_brought: string;
   problem: string;
   solution: string;
-  repair_cost: number;
+  estimate: number;
   status: 'not started' | 'in progress' | 'completed' | 'unsuccessful';
-  notes_repair: string | null;
-  start_date: string; // format: 'YYYY-MM-DDTHH:mm'
-  end_date: string;   // format: 'YYYY-MM-DDTHH:mm'
+  notes: string | null;
+  drop_off_date: Date; // format: 'YYYY-MM-DDTHH:mm'
+  pick_up_date: Date;   // format: 'YYYY-MM-DDTHH:mm'
+}
+
+type CustomerRepairInput = {
+  customer_id: string;
+  items_brought: string;
+  problem: string;
+  solution: string;
+  estimate: number;
+  status: 'not started' | 'in progress' | 'completed' | 'unsuccessful';
+  notes: string | null;
+  drop_off_date: Date; // format: 'YYYY-MM-DDTHH:mm'
+  pick_up_date: Date;   // format: 'YYYY-MM-DDTHH:mm'
 }

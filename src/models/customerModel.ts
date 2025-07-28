@@ -1,15 +1,20 @@
 import { db } from "../dataSource";
 
-
-async function getAllCustomers() {
-    const [rows] = await db.query(
-        'select customer_id, first_name, last_name, email from customers'
-    );
-
-    return rows;
+export interface Customer {
+  customer_id: number;
+  first_name: string;
+  last_name: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  phone: string;
+  email?: string;
 }
 
- async function searchCustomers(query: string) {
+
+// search by name or phone, limit 10
+export async function searchCustomers(query: string): Promise<Customer[]> {
   const like = `%${query}%`;
   const [rows] = await db.query(
     `SELECT customer_id, first_name, last_name, email, phone
@@ -19,21 +24,61 @@ async function getAllCustomers() {
      LIMIT 10`,
     [like, like]
   );
-  return rows;
+  return rows as Customer[];
 }
 
-async function getCustomers() {
-    const [rows] = await db.query("select * from customers");
-    return rows;
+// fetch every column for all customers
+export async function getCustomers(): Promise<Customer[]> {
+  const [rows] = await db.query(
+    `SELECT * FROM customers`
+  );
+  return rows as Customer[];
 }
 
-async function addCustomer(first_name: string, last_name: string, address: string, city: string, state: string, zip: string,
-    phone: string, email: string, notes: string
-){
-    const [result] = await db.execute("INSERT INTO customers (first_name, last_name, address, city, state, zip, phone, email, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        [first_name, last_name, address, city, state, zip, phone, email, notes]
-    );
-
-    return result;
+// insert a new customer, return the insertResult
+export async function addCustomer(
+  first_name: string,
+  last_name: string,
+  address: string,
+  city: string,
+  state: string,
+  zip: string,
+  phone: string,
+  email: string
+): Promise<any> {
+  const [result] = await db.execute(
+    `INSERT INTO customers
+      (first_name, last_name, address, city, state, zip, phone, email)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [first_name, last_name, address, city, state, zip, phone, email]
+  );
+  return result;
 }
-export { getAllCustomers, searchCustomers, getCustomers, addCustomer }
+
+// update an existing customer by id
+export async function updateCustomer(
+  customer_id: number,
+  data: Partial<Omit<Customer, "customer_id">>
+): Promise<any> {
+  const fields = Object.keys(data);
+  if (fields.length === 0) return null;
+
+  const sets = fields.map(f => `${f} = ?`).join(", ");
+  const params = fields.map(f => (data as any)[f]);
+  params.push(customer_id);
+
+  const [result] = await db.execute(
+    `UPDATE customers SET ${sets} WHERE customer_id = ?`,
+    params
+  );
+  return result;
+}
+
+// delete a customer by id
+export async function deleteCustomer(customer_id: number): Promise<any> {
+  const [result] = await db.execute(
+    `DELETE FROM customers WHERE customer_id = ?`,
+    [customer_id]
+  );
+  return result;
+}
