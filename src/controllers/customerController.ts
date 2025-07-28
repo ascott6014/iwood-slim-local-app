@@ -1,12 +1,12 @@
 // src/controllers/customerController.ts
 import { Request, Response } from 'express';
+import { parseDatabaseError } from '../utils/db-utils';
 import {
   searchCustomers,
   getCustomers,
   addCustomer,
   updateCustomer,
   deleteCustomer,
-  Customer,
 } from "../models/customerModel"
 
 // GET /customers/all
@@ -47,7 +47,8 @@ export async function handleSearchCustomers(
     res.status(200).json(results);
   } catch (err) {
     console.error('Error searching customers:', err);
-    res.status(500).json({ message: 'Error searching customers', error: err });
+    const databaseErrorMessage = parseDatabaseError(err);
+    res.status(500).json({ message: 'Error searching customers', error: databaseErrorMessage });
   }
 }
 
@@ -89,7 +90,8 @@ export async function handleAddCustomer(
     res.status(201).json({ message: 'Customer created', result });
   } catch (err) {
     console.error('Error adding customer:', err);
-    res.status(500).json({ message: 'Error adding customer', error: err });
+    const databaseErrorMessage = parseDatabaseError(err);
+    res.status(500).json({ message: 'Error adding customer', error: databaseErrorMessage });
   }
 }
 
@@ -116,7 +118,8 @@ export async function handleUpdateCustomer(
     res.status(200).json({ message: 'Customer updated', result });
   } catch (err) {
     console.error('Error updating customer:', err);
-    res.status(500).json({ message: 'Error updating customer', error: err });
+    const databaseErrorMessage = parseDatabaseError(err);
+    res.status(500).json({ message: 'Error updating customer', error: databaseErrorMessage });
   }
 }
 
@@ -136,7 +139,8 @@ export async function handleDeleteCustomer(
     res.status(200).json({ message: 'Customer deleted', result });
   } catch (err) {
     console.error('Error deleting customer:', err);
-    res.status(500).json({ message: 'Error deleting customer', error: err });
+    const databaseErrorMessage = parseDatabaseError(err);
+    res.status(500).json({ message: 'Error deleting customer', error: databaseErrorMessage });
   }
 }
 

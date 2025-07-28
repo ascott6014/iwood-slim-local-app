@@ -1,4 +1,4 @@
-export interface CustomerOrderInput {
+type CustomerOrderInput = {
   first_name: string;
   last_name: string;
   address: string;
@@ -7,13 +7,10 @@ export interface CustomerOrderInput {
   zip: string;
   phone: string;
   email: string;
-  notes: string | null;
   order_date: string;     // Format: 'YYYY-MM-DD'
-  order_total: number;
 }
 
-export interface OrderOnlyInput {
+type OrderOnlyInput = {
   customer_id: number;
   order_date: string;     // Format: 'YYYY-MM-DD'
-  order_total: number;
 }

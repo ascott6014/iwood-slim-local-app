@@ -1,17 +1,17 @@
-export interface Customer {
+type Customer = {
   customer_id: number;
   first_name: string;
   last_name: string;
-  address: string;
-  city: string;
-  state: string;
-  zip: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
   phone: string;
-  email: string;
-  notes: string | null;
+  email?: string;
 }
 
-export interface CustomerSummary {
+
+type CustomerSummary = {
   customer_id: number;
   first_name: string;
   last_name: string;

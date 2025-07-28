@@ -1,4 +1,4 @@
-export interface CustomerInstallInput {
+type CustomerInstallInput = {
   first_name: string;
   last_name: string;
   address: string;
@@ -7,17 +7,16 @@ export interface CustomerInstallInput {
   zip: string;
   phone: string;
   email: string;
-  notes: string | null;
   description: string;
-  cost: number;
+  estimate: number;
   install_date: string;    // Format: YYYY-MM-DD
   install_notes: string | null;
 }
 
-export interface InstallOnlyInput {
+type InstallOnlyInput = {
   customer_id: number;
   description: string;
-  cost: number;
+  estimate: number;
   install_date: string;    // Format: YYYY-MM-DD
   install_notes: string | null;
 }

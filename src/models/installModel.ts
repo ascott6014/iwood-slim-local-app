@@ -1,9 +1,9 @@
 import { db } from '../dataSource';
-import { CustomerInstallInput, InstallOnlyInput } from '../types/installTypes';
+
 
 export async function createCustomerAndInstall(data: CustomerInstallInput) {
   const [rows] = await db.query(
-    'CALL CreateCustomerAndInstall(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    'CALL AddCustomerAndInstall(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     [
       data.first_name,
       data.last_name,
@@ -13,9 +13,8 @@ export async function createCustomerAndInstall(data: CustomerInstallInput) {
       data.zip,
       data.phone,
       data.email,
-      data.notes ?? null,
       data.description,
-      data.cost,
+      data.estimate,
       data.install_date,
       data.install_notes ?? null,
     ]
@@ -25,11 +24,11 @@ export async function createCustomerAndInstall(data: CustomerInstallInput) {
 
 export async function createInstallForCustomer(data: InstallOnlyInput) {
   const [rows] = await db.query(
-    'CALL CreateInstallForCustomer(?, ?, ?, ?, ?)',
+    'CALL AddInstallForCustomer(?, ?, ?, ?, ?)',
     [
       data.customer_id,
       data.description,
-      data.cost,
+      data.estimate,
       data.install_date,
       data.install_notes ?? null,
     ]

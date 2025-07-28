@@ -1,9 +1,9 @@
 import { db } from "../dataSource";
-import { CustomerOrderInput, OrderOnlyInput } from "../types/orderTypes";
+
 
 export async function createCustomerAndOrder(data: CustomerOrderInput) {
   const [rows] = await db.query(
-    'CALL CreateCustomerAndOrder(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    'CALL AddCustomerAndOrder(?, ?, ?, ?, ?, ?, ?, ?, ?)',
     [
       data.first_name,
       data.last_name,
@@ -13,9 +13,7 @@ export async function createCustomerAndOrder(data: CustomerOrderInput) {
       data.zip,
       data.phone,
       data.email,
-      data.notes ?? null,
-      data.order_date,
-      data.order_total,
+      data.order_date
     ]
   );
   return rows;
@@ -23,11 +21,10 @@ export async function createCustomerAndOrder(data: CustomerOrderInput) {
 
 export async function createOrderForCustomer(data: OrderOnlyInput) {
   const [rows] = await db.query(
-    'CALL CreateOrderForCustomer(?, ?, ?)',
+    'CALL AddOrderForCustomer(?, ?)',
     [
       data.customer_id,
-      data.order_date,
-      data.order_total,
+      data.order_date
     ]
   );
   return rows;

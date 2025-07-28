@@ -1,16 +1,5 @@
 import { db } from "../dataSource";
 
-export interface Customer {
-  customer_id: number;
-  first_name: string;
-  last_name: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  zip?: string;
-  phone: string;
-  email?: string;
-}
 
 
 // search by name or phone, limit 10
