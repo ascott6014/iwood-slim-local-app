@@ -5,6 +5,7 @@ import { handleCustomerAndRepair, handleRepairForCustomer } from './controllers/
 import { handleCreateCustomerOrder, handleCreateOrderForCustomer } from './controllers/orderController';
 import { handleCreateCustomerInstall, handleCreateInstallForCustomer } from './controllers/installController';
 import { handleGetCustomers, handleAddCustomer, handleSearchCustomers} from './controllers/customerController';
+import { handleGetInstallSummaries, handleGetOrderSummaries, handleGetRepairSummaries } from './controllers/summaryController';
 
 
 
@@ -28,6 +29,11 @@ app.post('/create-install', handleCreateInstallForCustomer);
 
 app.get('/api/customers', handleGetCustomers);
 app.get('/api/customers/search', handleSearchCustomers);
+
+app.get('/summary/installs', handleGetInstallSummaries);
+app.get('/summary/orders', handleGetOrderSummaries);
+app.get('/summary/repairs', handleGetRepairSummaries);
+
 
 
 const customers = await getCustomers();

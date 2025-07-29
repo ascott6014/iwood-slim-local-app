@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>IwoodFixIt – Repair Summary</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <div class="page-container">
+    <div class="form-wrapper summary-container">
+      <h1>Repair Summary</h1>
+
+      <div class="search-section">
+        <div class="search-row">
+          <label for="customerSearch">Search Customers:</label>
+          <input type="text" id="customerSearch" placeholder="Start typing a name..." />
+          <select id="customerResults">
+            <option value="">All Customers</option>
+          </select>
+          <input type="hidden" id="customer_id" />
+        </div>
+      </div>
+
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>Customer ID</th>
+            <th>Name</th>
+            <th>Address</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th>Repair ID</th>
+            <th>Items Brought</th>
+            <th>Problem</th>
+            <th>Solution</th>
+            <th>Estimate</th>
+            <th>Status</th>
+            <th>Notes</th>
+            <th>Drop-Off</th>
+            <th>Pickup</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="repair-body"></tbody>
+      </table>
+
+      <div class="form-actions">
+        <button type="button" onclick="location.href='repairs.html'">
+          ⬅️ Back to Repairs
+        </button>
+        <button type="button" onclick="location.href='index.html'">
+          🏠 Home
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/repairSum.js"></script>
+</body>
+</html>

@@ -3,7 +3,7 @@ import { db } from "../dataSource";
 
 export async function createCustomerAndOrder(data: CustomerOrderInput) {
   const [rows] = await db.query(
-    'CALL AddCustomerAndOrder(?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    'CALL AddCustomerAndOrder(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     [
       data.first_name,
       data.last_name,
@@ -13,7 +13,8 @@ export async function createCustomerAndOrder(data: CustomerOrderInput) {
       data.zip,
       data.phone,
       data.email,
-      data.order_date
+      data.order_date,
+      data.order_total
     ]
   );
   return rows;
@@ -21,10 +22,11 @@ export async function createCustomerAndOrder(data: CustomerOrderInput) {
 
 export async function createOrderForCustomer(data: OrderOnlyInput) {
   const [rows] = await db.query(
-    'CALL AddOrderForCustomer(?, ?)',
+    'CALL AddOrderForCustomer(?, ?, ?)',
     [
       data.customer_id,
-      data.order_date
+      data.order_date,
+      data.order_total
     ]
   );
   return rows;

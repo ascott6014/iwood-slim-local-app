@@ -194,3 +194,109 @@ button:hover {
     gap: 20px;
   }
 }
+
+/* Table Styles for Summary Pages */
+.summary-container {
+  max-width: 1200px;
+  width: 100%;
+}
+
+.search-section {
+  margin-bottom: 30px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.search-row label {
+  font-weight: 600;
+  color: #2978b5;
+  min-width: 140px;
+}
+
+.search-row input, .search-row select {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.search-row input {
+  min-width: 200px;
+}
+
+.search-row select {
+  min-width: 250px;
+}
+
+.summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.summary-table th {
+  background-color: #2978b5;
+  color: white;
+  padding: 12px 8px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid #195a84;
+}
+
+.summary-table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: top;
+}
+
+.summary-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.summary-table tbody tr:nth-child(even) {
+  background-color: #fafbfc;
+}
+
+.summary-table button {
+  padding: 6px 12px;
+  font-size: 12px;
+  background-color: #28a745;
+  margin: 0;
+}
+
+.summary-table button:hover {
+  background-color: #218838;
+}
+
+@media screen and (max-width: 768px) {
+  .search-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-row label {
+    min-width: auto;
+  }
+  
+  .summary-table {
+    font-size: 12px;
+  }
+  
+  .summary-table th,
+  .summary-table td {
+    padding: 8px 4px;
+  }
+}
