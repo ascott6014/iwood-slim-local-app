@@ -47,4 +47,20 @@ async function createRepairForCustomer(data: CustomerRepairInput) {
   return rows;
 }
 
-export {createCustomerAndRepair, createRepairForCustomer}
+async function updateRepairPickupDate(repairId: number) {
+  const [rows] = await db.query(
+    'UPDATE repairs SET pickup_date = NOW() WHERE repair_id = ?',
+    [repairId]
+  );
+  return rows;
+}
+
+async function updateRepairStatus(repairId: number, status: string, notes?: string) {
+  const [rows] = await db.query(
+    'UPDATE repairs SET status = ?, notes = COALESCE(?, notes) WHERE repair_id = ?',
+    [status, notes, repairId]
+  );
+  return rows;
+}
+
+export {createCustomerAndRepair, createRepairForCustomer, updateRepairPickupDate, updateRepairStatus}

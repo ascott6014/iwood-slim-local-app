@@ -24,3 +24,5 @@ update install
 add order
 get order
 update order;
+
+update summary pages, add final price options for installs and repairs

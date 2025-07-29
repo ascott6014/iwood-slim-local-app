@@ -9,35 +9,41 @@
 <body>
   <div class="page-container">
     <div class="form-wrapper">
-      <h1>Orders</h1>
+      <h1>Orders Management</h1>
 
       <div class="button-columns">
         <div class="button-section">
-          <h3>🆕 New Customer</h3>
-          <button onclick="location.href='create-customer-order.html'">
-            New Customer + Order
+          <h3>🆕 Create New Order</h3>
+          <button onclick="location.href='create-complete-order.html'">
+            Create Order with Items
           </button>
+          <p style="font-size: 14px; color: #666; margin-top: 10px;">
+            Search/create customer and add items in one workflow
+          </p>
         </div>
 
         <div class="button-section">
-          <h3>🔁 Existing Customer</h3>
-          <button onclick="location.href='create-order.html'">
-            Order for Existing Customer
-          </button>
-        </div>
-
-        <div class="button-section">
-          <h3>View Orders</h3>
+          <h3>� View & Manage Orders</h3>
           <button onclick="location.href='order-summary.html'">
             Order Summary
           </button>
+          <button onclick="location.href='manage-order.html'">
+            Manage Existing Order
+          </button>
         </div>
-      </div>
 
-      <div class="form-actions">
-        <button type="button" onclick="location.href='index.html'">
-          ⬅️ Back to Home
-        </button>
+        <div class="button-section">
+          <h3>🏠 Navigation</h3>
+          <button onclick="location.href='index.html'">
+            Back to Home
+          </button>
+          <button onclick="location.href='repairs.html'">
+            Go to Repairs
+          </button>
+          <button onclick="location.href='installs.html'">
+            Go to Installs
+          </button>
+        </div>
       </div>
     </div>
   </div>

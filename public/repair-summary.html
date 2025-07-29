@@ -20,9 +20,42 @@
           </select>
           <input type="hidden" id="customer_id" />
         </div>
+        
+        <div class="filter-row">
+          <div class="button-group">
+            <h4>Pickup Status:</h4>
+            <button type="button" class="filter-btn active" data-pickup="all">Show All</button>
+            <button type="button" class="filter-btn" data-pickup="pending">Pending Pickup</button>
+            <button type="button" class="filter-btn" data-pickup="completed">Picked Up</button>
+          </div>
+        </div>
+        
+        <div class="filter-row">
+          <div class="button-group">
+            <h4>Repair Status:</h4>
+            <button type="button" class="filter-btn active" data-status="all">All Statuses</button>
+            <button type="button" class="filter-btn" data-status="Pending">Pending</button>
+            <button type="button" class="filter-btn" data-status="In Progress">In Progress</button>
+            <button type="button" class="filter-btn" data-status="Completed">Completed</button>
+            <button type="button" class="filter-btn" data-status="On Hold">On Hold</button>
+            <button type="button" class="filter-btn" data-status="Cancelled">Cancelled</button>
+          </div>
+        </div>
+        
+        <div class="filter-row">
+          <div class="button-group">
+            <h4>Sort By:</h4>
+            <button type="button" class="filter-btn active" data-sort="none">No Sorting</button>
+            <button type="button" class="filter-btn" data-sort="customer-asc">Customer (A-Z)</button>
+            <button type="button" class="filter-btn" data-sort="customer-desc">Customer (Z-A)</button>
+            <button type="button" class="filter-btn" data-sort="date-newest">Newest First</button>
+            <button type="button" class="filter-btn" data-sort="date-oldest">Oldest First</button>
+          </div>
+        </div>
       </div>
 
-      <table class="summary-table">
+      <div class="table-wrapper">
+        <table class="summary-table">
         <thead>
           <tr>
             <th>Customer ID</th>
@@ -44,6 +77,7 @@
         </thead>
         <tbody id="repair-body"></tbody>
       </table>
+      </div>
 
       <div class="form-actions">
         <button type="button" onclick="location.href='repairs.html'">

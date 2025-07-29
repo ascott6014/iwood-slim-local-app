@@ -6,12 +6,13 @@ import { db } from "../dataSource";
 export async function searchCustomers(query: string): Promise<Customer[]> {
   const like = `%${query}%`;
   const [rows] = await db.query(
-    `SELECT customer_id, first_name, last_name, email, phone
+    `SELECT customer_id, first_name, last_name, email, phone, address, city, state, zip
      FROM customers
      WHERE CONCAT(first_name, ' ', last_name) LIKE ?
         OR phone LIKE ?
+        OR email LIKE ?
      LIMIT 10`,
-    [like, like]
+    [like, like, like]
   );
   return rows as Customer[];
 }
