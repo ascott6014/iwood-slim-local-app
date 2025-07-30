@@ -100,15 +100,31 @@ async function searchItems() {
     return;
   }
 
+  // Show loading state
+  resultsSelect.innerHTML = '<option value="">Searching...</option>';
+
   try {
     const response = await fetch(`/api/items/search?q=${encodeURIComponent(query)}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
     const items = await response.json();
 
     resultsSelect.innerHTML = '<option value="">Select an item...</option>';
+    
+    if (items.length === 0) {
+      resultsSelect.innerHTML = '<option value="">No items found</option>';
+      return;
+    }
+    
     items.forEach(item => {
       const option = document.createElement('option');
       option.value = item.item_id;
-      option.textContent = `${item.item_name} - ${item.item_color} - ${item.item_model} ($${item.price.toFixed(2)})`;
+      // Convert price to number before using toFixed
+      const price = parseFloat(item.price) || 0;
+      option.textContent = `${item.item_name} - ${item.item_color} - ${item.item_model} ($${price.toFixed(2)})`;
       option.dataset.price = item.price;
       resultsSelect.appendChild(option);
     });
@@ -214,7 +230,16 @@ async function removeItem(orderItemId) {
 // Initialize search functionality
 document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('itemSearch');
-  searchInput.addEventListener('input', debounce(searchItems, 300));
+  
+  if (searchInput) {
+    // Add input event listener with debounce
+    searchInput.addEventListener('input', debounce(searchItems, 300));
+    
+    // Also add a manual trigger for testing
+    console.log('Search input event listener attached');
+  } else {
+    console.error('itemSearch input not found');
+  }
   
   // Check if there's an order ID in the URL
   const urlParams = new URLSearchParams(window.location.search);

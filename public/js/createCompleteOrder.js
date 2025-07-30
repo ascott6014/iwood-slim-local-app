@@ -1,6 +1,30 @@
 let selectedCustomer = null;
 let selectedItems = [];
 
+// Function to update form data for preview and submit
+function updateFormAndPreview() {
+  // Validate first
+  if (!selectedCustomer || selectedItems.length === 0) {
+    alert('Please select a customer and add items to the order');
+    return;
+  }
+
+  // If new customer, validate required fields
+  if (selectedCustomer === 'new') {
+    const firstName = document.getElementById('firstName').value.trim();
+    const lastName = document.getElementById('lastName').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    
+    if (!firstName || !lastName || !phone) {
+      alert('Please fill in first name, last name, and phone number for the new customer');
+      return;
+    }
+  }
+
+  // Call the createOrder function directly
+  createOrder();
+}
+
 function debounce(fn, delay = 300) {
   let timer;
   return function (...args) {
@@ -114,7 +138,9 @@ async function searchItems() {
         item_model: item.item_model,
         price: item.price
       });
-      option.textContent = `${item.item_name} - ${item.item_color} - ${item.item_model} ($${item.price.toFixed(2)})`;
+      // Convert price to number before using toFixed
+      const price = parseFloat(item.price) || 0;
+      option.textContent = `${item.item_name} - ${item.item_color} - ${item.item_model} ($${price.toFixed(2)})`;
       resultsSelect.appendChild(option);
     });
   } catch (error) {
@@ -176,12 +202,12 @@ function updateQuantity(index, newQuantity) {
 function updateItemsTable() {
   const tbody = document.getElementById('selectedItemsBody');
   const noItemsRow = document.getElementById('noItemsRow');
-  const reviewOrderBtn = document.getElementById('reviewOrderBtn');
+  const previewBtn = document.getElementById('previewBtn');
 
   if (selectedItems.length === 0) {
     tbody.innerHTML = '<tr id="noItemsRow"><td colspan="7" style="text-align: center; color: #666;">No items added yet</td></tr>';
     document.getElementById('orderTotal').textContent = '$0.00';
-    reviewOrderBtn.disabled = true;
+    previewBtn.disabled = true;
     return;
   }
 
@@ -210,7 +236,7 @@ function updateItemsTable() {
   }).join('');
 
   document.getElementById('orderTotal').textContent = `$${total.toFixed(2)}`;
-  reviewOrderBtn.disabled = !selectedCustomer;
+  previewBtn.disabled = !selectedCustomer || selectedItems.length === 0;
 }
 
 async function createOrder() {
@@ -219,9 +245,9 @@ async function createOrder() {
     return;
   }
 
-  const reviewOrderBtn = document.getElementById('reviewOrderBtn');
-  reviewOrderBtn.disabled = true;
-  reviewOrderBtn.textContent = 'Creating Order...';
+  const previewBtn = document.getElementById('previewBtn');
+  previewBtn.disabled = true;
+  previewBtn.textContent = 'Creating Order...';
 
   try {
     let orderData = {
@@ -239,8 +265,8 @@ async function createOrder() {
       
       if (!firstName || !lastName || !phone) {
         alert('Please fill in first name, last name, and phone number for the new customer');
-        reviewOrderBtn.disabled = false;
-        reviewOrderBtn.textContent = 'Review & Submit Order';
+        previewBtn.disabled = false;
+        previewBtn.textContent = 'Complete Order';
         return;
       }
 
@@ -269,20 +295,19 @@ async function createOrder() {
     const result = await response.json();
 
     if (response.ok) {
-      // Redirect to homepage after successful order creation
-      alert(`Order created successfully! Order ID: ${result.order_id}`);
-      window.location.href = 'index.html';
+      // Show success message instead of redirecting immediately
+      showOrderSuccess(result);
     } else {
       alert(`Error creating order: ${result.message}`);
-      reviewOrderBtn.disabled = false;
-      reviewOrderBtn.textContent = 'Review & Submit Order';
+      previewBtn.disabled = false;
+      previewBtn.textContent = 'Complete Order';
     }
 
   } catch (error) {
     console.error('Error creating order:', error);
     alert('Failed to create order. Please try again.');
-    reviewOrderBtn.disabled = false;
-    reviewOrderBtn.textContent = 'Review & Submit Order';
+    previewBtn.disabled = false;
+    previewBtn.textContent = 'Complete Order';
   }
 }
 
@@ -454,6 +479,337 @@ function createAnotherOrder() {
   updateItemsTable();
 }
 
+function showOrderSuccess(result) {
+  // Hide the order form sections
+  document.querySelector('.container').style.display = 'none';
+  
+  const successSection = document.getElementById('successMessage');
+  const detailsDiv = document.getElementById('orderDetails');
+  
+  // Calculate total
+  let totalAmount = 0;
+  selectedItems.forEach(item => {
+    totalAmount += item.total;
+  });
+  
+  detailsDiv.innerHTML = `
+    <p><strong>Order ID:</strong> ${result.order_id}</p>
+    <p><strong>Customer:</strong> ${selectedCustomer === 'new' ? 
+      `${document.getElementById('firstName').value} ${document.getElementById('lastName').value}` : 
+      `${selectedCustomer.first_name} ${selectedCustomer.last_name}`}</p>
+    <p><strong>Total Items:</strong> ${selectedItems.length}</p>
+    <p><strong>Total Amount:</strong> $${totalAmount.toFixed(2)}</p>
+    <div style="margin-top: 20px;">
+      <button onclick="printOrderTicket(${JSON.stringify(result).replace(/"/g, '&quot;')})" class="submit-button" style="background-color: #28a745; margin-right: 10px;">
+        Print Order Ticket
+      </button>
+    </div>
+  `;
+  
+  successSection.style.display = 'block';
+}
+
+function printOrderTicket(result) {
+  // Get current data
+  const customerName = selectedCustomer === 'new' ? 
+    `${document.getElementById('firstName').value} ${document.getElementById('lastName').value}` : 
+    `${selectedCustomer.first_name} ${selectedCustomer.last_name}`;
+  
+  const customerPhone = selectedCustomer === 'new' ? 
+    document.getElementById('phone').value : 
+    selectedCustomer.phone;
+    
+  const customerEmail = selectedCustomer === 'new' ? 
+    document.getElementById('email').value : 
+    selectedCustomer.email;
+
+  const customerAddress = selectedCustomer === 'new' ? 
+    `${document.getElementById('address').value}, ${document.getElementById('city').value}, ${document.getElementById('state').value} ${document.getElementById('zip').value}` : 
+    `${selectedCustomer.address}, ${selectedCustomer.city}, ${selectedCustomer.state} ${selectedCustomer.zip}`;
+
+  // Calculate total
+  let totalAmount = 0;
+  selectedItems.forEach(item => {
+    totalAmount += item.total;
+  });
+
+  // Create customer copy (full detailed version)
+  const customerCopy = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Order Ticket #${result.order_id} - Customer Copy</title>
+      <style>
+        body { 
+          font-family: Arial, sans-serif; 
+          margin: 20px; 
+          line-height: 1.4;
+          font-size: 12px;
+        }
+        .header { 
+          text-align: center; 
+          border-bottom: 2px solid #333; 
+          padding-bottom: 10px; 
+          margin-bottom: 20px;
+        }
+        .company-name { 
+          font-size: 18px; 
+          font-weight: bold; 
+          margin-bottom: 5px;
+        }
+        .ticket-title { 
+          font-size: 16px; 
+          font-weight: bold; 
+          margin-bottom: 20px;
+        }
+        .copy-type {
+          text-align: center;
+          font-size: 14px;
+          font-weight: bold;
+          color: #007bff;
+          margin-bottom: 15px;
+        }
+        .section { 
+          margin-bottom: 15px; 
+          padding: 10px;
+          border: 1px solid #ccc;
+        }
+        .section-title { 
+          font-weight: bold; 
+          font-size: 14px; 
+          margin-bottom: 8px;
+          border-bottom: 1px solid #666;
+          padding-bottom: 3px;
+        }
+        .info-row { 
+          margin: 5px 0; 
+        }
+        .label { 
+          font-weight: bold; 
+          display: inline-block; 
+          width: 120px;
+        }
+        .items-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 10px;
+        }
+        .items-table th, .items-table td {
+          border: 1px solid #333;
+          padding: 5px;
+          text-align: left;
+        }
+        .items-table th {
+          background-color: #f0f0f0;
+          font-weight: bold;
+        }
+        .total-section {
+          margin-top: 15px;
+          padding: 10px;
+          border: 2px solid #333;
+          background-color: #f9f9f9;
+        }
+        .footer {
+          margin-top: 30px;
+          border-top: 1px solid #333;
+          padding-top: 10px;
+          text-align: center;
+          font-size: 10px;
+        }
+        @media print {
+          body { margin: 0; }
+          .no-print { display: none; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="company-name">iWoodFix-IT</div>
+        <div>Professional Wood & Furniture Solutions</div>
+      </div>
+      
+      <div class="copy-type">CUSTOMER COPY</div>
+      <div class="ticket-title">ORDER TICKET #${result.order_id}</div>
+      
+      <div class="section">
+        <div class="section-title">Customer Information</div>
+        <div class="info-row"><span class="label">Name:</span> ${customerName}</div>
+        <div class="info-row"><span class="label">Phone:</span> ${customerPhone}</div>
+        <div class="info-row"><span class="label">Email:</span> ${customerEmail || 'N/A'}</div>
+        <div class="info-row"><span class="label">Address:</span> ${customerAddress}</div>
+      </div>
+      
+      <div class="section">
+        <div class="section-title">Order Items</div>
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Color/Model</th>
+              <th>Price</th>
+              <th>Qty</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${selectedItems.map(item => `
+              <tr>
+                <td>${item.item_name}</td>
+                <td>${item.item_color} ${item.item_model}</td>
+                <td>$${item.price.toFixed(2)}</td>
+                <td>${item.quantity}</td>
+                <td>$${item.total.toFixed(2)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="total-section">
+        <div class="section-title">Order Summary</div>
+        <div class="info-row"><span class="label">Total Items:</span> ${selectedItems.length}</div>
+        <div class="info-row"><span class="label">Order Date:</span> ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</div>
+        <div class="info-row" style="font-size: 16px; font-weight: bold; margin-top: 10px;">
+          <span class="label">TOTAL AMOUNT:</span> $${totalAmount.toFixed(2)}
+        </div>
+      </div>
+      
+      <div class="footer">
+        <p>Thank you for choosing iWoodFix-IT!</p>
+        <p>Please keep this ticket for your records.</p>
+      </div>
+      
+      <div class="no-print" style="margin-top: 20px; text-align: center;">
+        <button onclick="window.print()" style="padding: 10px 20px; font-size: 14px;">Print Both Copies</button>
+        <button onclick="window.close()" style="padding: 10px 20px; font-size: 14px; margin-left: 10px;">Close</button>
+      </div>
+    </body>
+    </html>
+    
+    <div style="page-break-before: always;"></div>
+    
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Order Ticket #${result.order_id} - Business Copy</title>
+      <style>
+        body { 
+          font-family: Arial, sans-serif; 
+          margin: 10px; 
+          line-height: 1.2;
+          font-size: 10px;
+        }
+        .header { 
+          text-align: center; 
+          border-bottom: 1px solid #333; 
+          padding-bottom: 5px; 
+          margin-bottom: 10px;
+        }
+        .company-name { 
+          font-size: 14px; 
+          font-weight: bold; 
+          margin-bottom: 2px;
+        }
+        .ticket-title { 
+          font-size: 12px; 
+          font-weight: bold; 
+          margin-bottom: 10px;
+        }
+        .copy-type {
+          text-align: center;
+          font-size: 10px;
+          font-weight: bold;
+          color: #dc3545;
+          margin-bottom: 8px;
+        }
+        .compact-section { 
+          margin-bottom: 8px; 
+          padding: 5px;
+          border: 1px solid #ccc;
+        }
+        .compact-title { 
+          font-weight: bold; 
+          font-size: 10px; 
+          margin-bottom: 3px;
+          text-decoration: underline;
+        }
+        .compact-row { 
+          margin: 2px 0;
+          font-size: 9px; 
+        }
+        .compact-label { 
+          font-weight: bold; 
+          display: inline-block; 
+          width: 60px;
+        }
+        .items-compact {
+          font-size: 8px;
+          max-height: 60px;
+          overflow: hidden;
+        }
+        .total-compact {
+          background-color: #f0f0f0;
+          padding: 5px;
+          border: 1px solid #333;
+          text-align: center;
+          font-weight: bold;
+          margin-top: 8px;
+        }
+        @media print {
+          body { margin: 0; }
+          .no-print { display: none; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="company-name">iWoodFix-IT</div>
+      </div>
+      
+      <div class="copy-type">BUSINESS COPY</div>
+      <div class="ticket-title">ORDER #${result.order_id}</div>
+      
+      <div class="compact-section">
+        <div class="compact-title">Customer</div>
+        <div class="compact-row"><span class="compact-label">Name:</span> ${customerName}</div>
+        <div class="compact-row"><span class="compact-label">Phone:</span> ${customerPhone}</div>
+      </div>
+      
+      <div class="compact-section">
+        <div class="compact-title">Order Items (${selectedItems.length} items)</div>
+        <div class="items-compact">
+          ${selectedItems.slice(0, 3).map(item => `
+            <div class="compact-row">${item.item_name} - ${item.quantity}x</div>
+          `).join('')}
+          ${selectedItems.length > 3 ? `<div class="compact-row">... +${selectedItems.length - 3} more items</div>` : ''}
+        </div>
+        <div class="compact-row"><span class="compact-label">Date:</span> ${new Date().toLocaleDateString()}</div>
+      </div>
+      
+      <div class="total-compact">
+        TOTAL: $${totalAmount.toFixed(2)}
+      </div>
+      
+      <div style="margin-top: 10px; text-align: center; font-size: 8px;">
+        Created: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
+      </div>
+    </body>
+    </html>
+  `;
+
+  // Open print window with both copies
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(customerCopy);
+  printWindow.document.close();
+  
+  // Auto-print after content loads
+  printWindow.onload = function() {
+    setTimeout(() => {
+      printWindow.print();
+    }, 250);
+  };
+}
+
 // Initialize event listeners
 document.addEventListener('DOMContentLoaded', () => {
   const customerSearchInput = document.getElementById('customerSearch');
@@ -465,7 +821,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('newCustomerBtn').addEventListener('click', showNewCustomerForm);
   document.getElementById('changeCustomerBtn').addEventListener('click', changeCustomer);
   document.getElementById('addItemBtn').addEventListener('click', addItemToOrder);
-  document.getElementById('reviewOrderBtn').addEventListener('click', reviewOrder);
+  document.getElementById('previewBtn').addEventListener('click', updateFormAndPreview);
   document.getElementById('createAnotherBtn').addEventListener('click', createAnotherOrder);
 
   // Hide customer results when clicking elsewhere
@@ -475,3 +831,50 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+function updateFormAndPreview() {
+  // Validate that we have customer and items
+  if (!selectedCustomer) {
+    alert('Please select a customer first');
+    return;
+  }
+  
+  if (selectedItems.length === 0) {
+    alert('Please add at least one item to the order');
+    return;
+  }
+  
+  // Update hidden form fields for preview
+  if (selectedCustomer && selectedCustomer !== 'new') {
+    document.getElementById('hidden_customer_id').value = selectedCustomer.customer_id;
+    document.getElementById('hidden_customer_name').value = `${selectedCustomer.first_name} ${selectedCustomer.last_name}`;
+    document.getElementById('hidden_customer_phone').value = selectedCustomer.phone;
+    document.getElementById('hidden_customer_email').value = selectedCustomer.email || '';
+    document.getElementById('hidden_customer_address').value = `${selectedCustomer.address}, ${selectedCustomer.city}, ${selectedCustomer.state} ${selectedCustomer.zip}`;
+  } else if (selectedCustomer === 'new') {
+    const firstName = document.getElementById('firstName').value;
+    const lastName = document.getElementById('lastName').value;
+    const phone = document.getElementById('phone').value;
+    const email = document.getElementById('email').value;
+    const address = document.getElementById('address').value;
+    const city = document.getElementById('city').value;
+    const state = document.getElementById('state').value;
+    const zip = document.getElementById('zip').value;
+    
+    if (!firstName || !lastName || !phone) {
+      alert('Please fill in the required customer information (First Name, Last Name, Phone)');
+      return;
+    }
+    
+    document.getElementById('hidden_customer_id').value = 'new';
+    document.getElementById('hidden_customer_name').value = `${firstName} ${lastName}`;
+    document.getElementById('hidden_customer_phone').value = phone;
+    document.getElementById('hidden_customer_email').value = email;
+    document.getElementById('hidden_customer_address').value = `${address}, ${city}, ${state} ${zip}`;
+  }
+  
+  // Update items and total
+  document.getElementById('hidden_order_items').value = JSON.stringify(selectedItems);
+  const total = selectedItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
+  document.getElementById('hidden_order_total').value = total.toFixed(2);
+}

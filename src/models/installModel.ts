@@ -35,3 +35,48 @@ export async function createInstallForCustomer(data: InstallOnlyInput) {
   );
   return rows;
 }
+
+export async function getInstallItems(installId: number) {
+  const [rows] = await db.query(`
+    SELECT 
+      ii.install_item_id,
+      ii.install_id,
+      ii.item_id,
+      ii.install_item_quantity,
+      ii.total_price,
+      i.item_name,
+      i.item_color,
+      i.item_model,
+      i.description,
+      i.price
+    FROM install_items ii
+    JOIN items i ON ii.item_id = i.item_id
+    WHERE ii.install_id = ?
+    ORDER BY ii.install_item_id
+  `, [installId]);
+  return rows;
+}
+
+export async function addInstallItem(installId: number, itemId: number, quantity: number) {
+  const [rows] = await db.query(
+    'CALL AddInstallItem(?, ?, ?)',
+    [installId, itemId, quantity]
+  );
+  return rows;
+}
+
+export async function updateInstallItem(installItemId: number, quantity: number) {
+  const [rows] = await db.query(
+    'CALL UpdateInstallItem(?, ?)',
+    [installItemId, quantity]
+  );
+  return rows;
+}
+
+export async function removeInstallItem(installItemId: number) {
+  const [rows] = await db.query(
+    'CALL RemoveInstallItem(?)',
+    [installItemId]
+  );
+  return rows;
+}

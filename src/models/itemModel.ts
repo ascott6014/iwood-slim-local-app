@@ -37,3 +37,15 @@ export async function getOrderItems(orderId: number): Promise<OrderItem[]> {
   );
   return rows as OrderItem[];
 }
+
+export async function getInstallItems(): Promise<Item[]> {
+  const [rows] = await db.query(
+    `SELECT item_id, item_name, item_color, item_model, description, cost, markup_rate, price, quantity, sell_item, repair_item, install_item
+     FROM items
+     WHERE install_item = true
+       AND quantity > 0
+     ORDER BY item_name`,
+    []
+  );
+  return rows as Item[];
+}

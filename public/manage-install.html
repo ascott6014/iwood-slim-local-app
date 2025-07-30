@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>IwoodFixIt – Manage Install</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <div class="page-container">
+    <div class="form-wrapper summary-container">
+      <h1>Manage Install Items</h1>
+
+      <!-- Install Info Section -->
+      <div class="search-section">
+        <div class="search-row">
+          <label for="installIdInput">Install ID:</label>
+          <input type="number" id="installIdInput" placeholder="Enter Install ID..." />
+          <button id="loadInstallBtn">Load Install</button>
+        </div>
+        <div id="installInfo" style="display: none; margin-top: 15px;">
+          <div class="install-details">
+            <strong>Install #<span id="installNumber"></span></strong><br>
+            <strong>Customer:</strong> <span id="customerName"></span><br>
+            <strong>Install Date:</strong> <span id="installDate"></span><br>
+            <strong>Description:</strong> <span id="installDescription"></span><br>
+            <strong>Labor Estimate:</strong> <span id="installEstimate"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Items Section -->
+      <div class="search-section" id="addItemSection" style="display: none;">
+        <h3>Add Items to Install</h3>
+        <div class="search-row">
+          <select id="itemSelect">
+            <option value="">Select an item...</option>
+          </select>
+          <input type="number" id="itemQuantity" placeholder="Qty" min="1" value="1" style="width: 80px;" />
+          <button id="addItemBtn">Add Item</button>
+        </div>
+      </div>
+
+      <!-- Install Items Table -->
+      <div id="installItemsSection" style="display: none;">
+        <h3>Install Items</h3>
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>Item Name</th>
+              <th>Model</th>
+              <th>Color</th>
+              <th>Unit Price</th>
+              <th>Quantity</th>
+              <th>Total</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="installItemsTable">
+            <!-- Items will be loaded here -->
+          </tbody>
+        </table>
+
+        <!-- Install Totals -->
+        <div class="totals-section" style="margin-top: 20px; text-align: right;">
+          <div class="totals-container">
+            <div class="total-row">
+              <span class="total-label">Labor Estimate:</span>
+              <span class="total-value" id="installEstimate">$0.00</span>
+            </div>
+            <div class="total-row">
+              <span class="total-label">Items Subtotal:</span>
+              <span class="total-value" id="itemsSubtotal">$0.00</span>
+            </div>
+            <div class="total-row subtotal-row">
+              <span class="total-label">Subtotal:</span>
+              <span class="total-value" id="installSubtotal">$0.00</span>
+            </div>
+            <div class="total-row">
+              <span class="total-label">Tax:</span>
+              <span class="total-value" id="taxAmount">$0.00</span>
+            </div>
+            <div class="total-row final-total">
+              <span class="total-label">Final Price:</span>
+              <span class="total-value" id="finalPrice">$0.00</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="form-actions" style="margin-top: 30px;">
+        <button type="button" onclick="location.href='installs.html'">Back to Installs</button>
+        <button type="button" onclick="location.href='index.html'">Back to Home</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/installManagement.js"></script>
+
+  <style>
+    .install-details {
+      background-color: #f5f5f5;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 10px 0;
+    }
+
+    .totals-section {
+      border-top: 2px solid #ddd;
+      padding-top: 15px;
+    }
+
+    .totals-container {
+      display: inline-block;
+      text-align: left;
+      min-width: 300px;
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .total-row:last-child {
+      border-bottom: none;
+    }
+
+    .subtotal-row {
+      border-top: 1px solid #ccc;
+      border-bottom: 2px solid #ccc;
+      font-weight: bold;
+    }
+
+    .final-total {
+      font-weight: bold;
+      font-size: 1.1em;
+      background-color: #f0f8ff;
+      padding: 8px 5px;
+      border-radius: 3px;
+    }
+
+    .total-label {
+      font-weight: bold;
+    }
+
+    .total-value {
+      margin-left: 20px;
+    }
+
+    .quantity-input {
+      width: 60px;
+      text-align: center;
+    }
+
+    .remove-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .remove-btn:hover {
+      background-color: #c82333;
+    }
+
+    .search-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .search-row label {
+      min-width: 80px;
+      font-weight: bold;
+    }
+
+    .search-row input, .search-row select {
+      flex: 1;
+      min-width: 150px;
+    }
+
+    .search-row button {
+      white-space: nowrap;
+    }
+  </style>
+</body>
+</html>

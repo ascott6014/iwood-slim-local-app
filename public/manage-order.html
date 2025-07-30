@@ -31,9 +31,11 @@
         <div class="search-row">
           <label for="itemSearch">Search Items:</label>
           <input type="text" id="itemSearch" placeholder="Search by name, model, or description..." />
+          <button type="button" onclick="searchItems()" style="padding: 6px 12px;">Search</button>
           <select id="itemResults">
             <option value="">Select an item...</option>
           </select>
+          <label for="itemQuantity">Quantity:</label>
           <input type="number" id="itemQuantity" placeholder="Qty" min="1" value="1" style="width: 80px;" />
           <button onclick="addItemToOrder()">Add Item</button>
         </div>

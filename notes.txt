@@ -26,3 +26,4 @@ get order
 update order;
 
 update summary pages, add final price options for installs and repairs
+fix so that table does not go off page when too many table items

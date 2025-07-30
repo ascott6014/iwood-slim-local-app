@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { searchItems, getOrderItems } from '../models/itemModel';
+import { searchItems, getOrderItems, getInstallItems } from '../models/itemModel';
 import { addOrderItem, removeOrderItem, updateOrderItem } from '../models/orderModel';
 
 export async function handleSearchItems(req: Request, res: Response): Promise<void> {
@@ -83,5 +83,15 @@ export async function handleRemoveOrderItem(req: Request, res: Response): Promis
   } catch (error) {
     console.error('Error removing order item:', error);
     res.status(500).json({ message: 'Unable to remove order item', error });
+  }
+}
+
+export async function handleGetInstallItems(req: Request, res: Response): Promise<void> {
+  try {
+    const items = await getInstallItems();
+    res.status(200).json(items);
+  } catch (error) {
+    console.error('Error fetching install items:', error);
+    res.status(500).json({ message: 'Unable to fetch install items', error });
   }
 }

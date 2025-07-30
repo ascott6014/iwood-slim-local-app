@@ -1,4 +1,6 @@
 let selectedCustomer = null;
+let selectedItems = [];
+let totalItemsAmount = 0;
 
 function debounce(fn, delay = 300) {
   let timer;
@@ -87,8 +89,137 @@ function changeCustomer() {
   document.getElementById('selectedCustomer').style.display = 'none';
   document.getElementById('newCustomerForm').style.display = 'none';
   document.getElementById('repairDetailsSection').style.display = 'none';
+  document.getElementById('itemSelectionSection').style.display = 'none';
   document.getElementById('customerSearch').value = '';
   updateCreateButton();
+}
+
+// Item Search and Management Functions
+async function searchItems() {
+  const searchInput = document.getElementById('itemSearch');
+  const resultsSelect = document.getElementById('itemResults');
+  
+  const query = searchInput.value.trim();
+  if (query.length < 2) {
+    resultsSelect.innerHTML = '<option value="">Select an item...</option>';
+    return;
+  }
+
+  try {
+    const response = await fetch(`/api/items/search?q=${encodeURIComponent(query)}&repair_item=true`);
+    const items = await response.json();
+
+    resultsSelect.innerHTML = '<option value="">Select an item...</option>';
+    
+    items.forEach(item => {
+      if (item.repair_item) { // Only show items that can be used for repairs
+        const option = document.createElement('option');
+        option.value = JSON.stringify(item);
+        option.textContent = `${item.item_name} - ${item.item_color} ${item.item_model} ($${parseFloat(item.price).toFixed(2)})`;
+        resultsSelect.appendChild(option);
+      }
+    });
+  } catch (error) {
+    console.error('Error searching items:', error);
+    resultsSelect.innerHTML = '<option value="">Error loading items</option>';
+  }
+}
+
+function addItemToRepair() {
+  const itemResults = document.getElementById('itemResults');
+  const itemQuantity = document.getElementById('itemQuantity');
+  
+  if (!itemResults.value) {
+    alert('Please select an item');
+    return;
+  }
+  
+  if (!itemQuantity.value || itemQuantity.value < 1) {
+    alert('Please enter a valid quantity');
+    return;
+  }
+
+  try {
+    const selectedItem = JSON.parse(itemResults.value);
+    const quantity = parseInt(itemQuantity.value);
+    const itemTotal = parseFloat(selectedItem.price) * quantity;
+
+    // Check if item already exists in the list
+    const existingItemIndex = selectedItems.findIndex(item => item.item_id === selectedItem.item_id);
+    
+    if (existingItemIndex !== -1) {
+      // Update existing item quantity
+      selectedItems[existingItemIndex].quantity += quantity;
+      selectedItems[existingItemIndex].total = selectedItems[existingItemIndex].quantity * parseFloat(selectedItem.price);
+    } else {
+      // Add new item
+      selectedItems.push({
+        item_id: selectedItem.item_id,
+        item_name: selectedItem.item_name,
+        item_color: selectedItem.item_color,
+        item_model: selectedItem.item_model,
+        price: parseFloat(selectedItem.price),
+        quantity: quantity,
+        total: itemTotal
+      });
+    }
+
+    updateItemsTable();
+    
+    // Reset form
+    itemResults.value = '';
+    itemQuantity.value = '1';
+    document.getElementById('itemSearch').value = '';
+    
+  } catch (error) {
+    console.error('Error adding item:', error);
+    alert('Error adding item. Please try again.');
+  }
+}
+
+function updateItemsTable() {
+  const tbody = document.getElementById('selectedItemsBody');
+  const noItemsRow = document.getElementById('noItemsRow');
+  
+  // Clear existing rows except the "no items" row
+  Array.from(tbody.children).forEach(row => {
+    if (row.id !== 'noItemsRow') {
+      row.remove();
+    }
+  });
+
+  if (selectedItems.length === 0) {
+    noItemsRow.style.display = 'table-row';
+    totalItemsAmount = 0;
+  } else {
+    noItemsRow.style.display = 'none';
+    totalItemsAmount = 0;
+
+    selectedItems.forEach((item, index) => {
+      totalItemsAmount += item.total;
+      
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${item.item_name}</td>
+        <td>${item.item_color}</td>
+        <td>${item.item_model}</td>
+        <td>$${item.price.toFixed(2)}</td>
+        <td>${item.quantity}</td>
+        <td>$${item.total.toFixed(2)}</td>
+        <td>
+          <button onclick="removeItemFromRepair(${index})" class="summary-table button" style="background-color: #dc3545;">Remove</button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+  }
+
+  document.getElementById('itemsTotal').textContent = `$${totalItemsAmount.toFixed(2)}`;
+}
+
+function removeItemFromRepair(index) {
+  selectedItems.splice(index, 1);
+  updateItemsTable();
 }
 
 function updateCreateButton() {
@@ -207,6 +338,28 @@ function reviewRepair() {
   const problem = document.getElementById('problem').value.trim();
   const solution = document.getElementById('solution').value.trim();
   const estimate = document.getElementById('estimate').value;
+  const dropOffDate = document.getElementById('dropOffDate').value;
+
+  if (!itemsBrought || !problem || !solution || !estimate || !dropOffDate) {
+    alert('Please fill in all required fields');
+    return;
+  }
+
+  // Hide repair details section and show item selection section
+  document.getElementById('repairDetailsSection').style.display = 'none';
+  document.getElementById('itemSelectionSection').style.display = 'block';
+}
+
+async function finalSubmitRepair() {
+  if (!selectedCustomer) {
+    alert('Please select a customer');
+    return;
+  }
+
+  const itemsBrought = document.getElementById('itemsBrought').value.trim();
+  const problem = document.getElementById('problem').value.trim();
+  const solution = document.getElementById('solution').value.trim();
+  const estimate = document.getElementById('estimate').value;
   const status = document.getElementById('status').value;
   const notesRepair = document.getElementById('notesRepair').value.trim();
   const dropOffDate = document.getElementById('dropOffDate').value;
@@ -217,86 +370,448 @@ function reviewRepair() {
     return;
   }
 
-  // Prepare customer info
-  let customerInfo;
-  if (selectedCustomer === 'new') {
-    const firstName = document.getElementById('firstName').value.trim();
-    const lastName = document.getElementById('lastName').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-    
-    if (!firstName || !lastName || !phone) {
-      alert('Please fill in first name, last name, and phone number for the new customer');
-      return;
+  const finalSubmitBtn = document.getElementById('finalSubmitBtn');
+  finalSubmitBtn.disabled = true;
+  finalSubmitBtn.textContent = 'Creating Repair...';
+
+  try {
+    let repairData = {
+      items_brought: itemsBrought,
+      problem: problem,
+      solution: solution,
+      estimate: parseFloat(estimate),
+      status: status,
+      notes: notesRepair || null,
+      drop_off_date: dropOffDate,
+      pick_up_date: pickUpDate || null
+    };
+
+    let endpoint;
+    if (selectedCustomer === 'new') {
+      // Validate new customer form
+      const firstName = document.getElementById('firstName').value.trim();
+      const lastName = document.getElementById('lastName').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+      
+      if (!firstName || !lastName || !phone) {
+        alert('Please fill in first name, last name, and phone number for the new customer');
+        finalSubmitBtn.disabled = false;
+        finalSubmitBtn.textContent = 'Complete Repair';
+        return;
+      }
+
+      repairData = {
+        ...repairData,
+        first_name: firstName,
+        last_name: lastName,
+        address: document.getElementById('address').value.trim(),
+        city: document.getElementById('city').value.trim(),
+        state: document.getElementById('state').value.trim(),
+        zip: document.getElementById('zip').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        email: document.getElementById('email').value.trim()
+      };
+      endpoint = '/repairs/create-customer-repair';
+    } else {
+      repairData.customer_id = selectedCustomer.customer_id;
+      endpoint = '/repairs/create-repair';
     }
 
-    customerInfo = {
-      name: `${firstName} ${lastName}`,
-      address: document.getElementById('address').value.trim(),
-      city: document.getElementById('city').value.trim(),
-      state: document.getElementById('state').value.trim(),
-      zip: document.getElementById('zip').value.trim(),
-      phone: document.getElementById('phone').value.trim(),
-      email: document.getElementById('email').value.trim()
-    };
-  } else {
-    customerInfo = {
-      name: `${selectedCustomer.first_name} ${selectedCustomer.last_name}`,
-      address: selectedCustomer.address,
-      city: selectedCustomer.city,
-      state: selectedCustomer.state,
-      zip: selectedCustomer.zip,
-      phone: selectedCustomer.phone,
-      email: selectedCustomer.email
-    };
-  }
+    console.log('Submitting repair data:', repairData);
 
-  // Create summary HTML
-  let summaryHTML = `
-    <h2>Repair Review</h2>
-    <div style="text-align: left;">
-      <h3>Customer Information:</h3>
-      <p><strong>Name:</strong> ${customerInfo.name}</p>
-      <p><strong>Phone:</strong> ${customerInfo.phone}</p>
-      <p><strong>Email:</strong> ${customerInfo.email}</p>
-      <p><strong>Address:</strong> ${customerInfo.address}, ${customerInfo.city}, ${customerInfo.state} ${customerInfo.zip}</p>
-      
-      <h3>Repair Details:</h3>
-      <p><strong>Items Brought:</strong> ${itemsBrought}</p>
-      <p><strong>Problem:</strong> ${problem}</p>
-      <p><strong>Solution:</strong> ${solution}</p>
-      <p><strong>Estimated Cost:</strong> $${parseFloat(estimate).toFixed(2)}</p>
-      <p><strong>Status:</strong> ${status}</p>
-      <p><strong>Drop Off Date:</strong> ${new Date(dropOffDate).toLocaleString()}</p>
-      ${pickUpDate ? `<p><strong>Pick Up Date:</strong> ${new Date(pickUpDate).toLocaleString()}</p>` : ''}
-      ${notesRepair ? `<p><strong>Notes:</strong> ${notesRepair}</p>` : ''}
-    </div>
-    <div style="margin-top: 20px; text-align: center;">
-      <button onclick="printRepairReview()" style="padding: 10px 20px; margin: 5px; background-color: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer;">🖨️ Print</button>
-      <button onclick="submitRepair()" style="padding: 10px 20px; margin: 5px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">✅ Confirm & Submit</button>
-      <button onclick="closeRepairReview()" style="padding: 10px 20px; margin: 5px; background-color: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">❌ Cancel</button>
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(repairData)
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create repair');
+    }
+
+    const result = await response.json();
+    console.log('Repair created:', result);
+
+    // If there are selected items, add them to the repair
+    if (selectedItems.length > 0 && result.repair_id) {
+      await addItemsToRepair(result.repair_id);
+    }
+
+    // Show success message
+    showRepairSuccess(result);
+
+  } catch (error) {
+    console.error('Error creating repair:', error);
+    alert('Error creating repair. Please try again.');
+    finalSubmitBtn.disabled = false;
+    finalSubmitBtn.textContent = 'Complete Repair';
+  }
+}
+
+async function addItemsToRepair(repairId) {
+  try {
+    for (const item of selectedItems) {
+      const response = await fetch('/repairs/add-item', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          repair_id: repairId,
+          item_id: item.item_id,
+          quantity: item.quantity
+        })
+      });
+
+      if (!response.ok) {
+        console.error('Failed to add item to repair:', item);
+      }
+    }
+  } catch (error) {
+    console.error('Error adding items to repair:', error);
+  }
+}
+
+function showRepairSuccess(result) {
+  document.getElementById('itemSelectionSection').style.display = 'none';
+  
+  const successSection = document.getElementById('successMessage');
+  const detailsDiv = document.getElementById('repairDetails');
+  
+  detailsDiv.innerHTML = `
+    <p><strong>Repair ID:</strong> ${result.repair_id}</p>
+    <p><strong>Customer:</strong> ${selectedCustomer === 'new' ? 
+      `${document.getElementById('firstName').value} ${document.getElementById('lastName').value}` : 
+      `${selectedCustomer.first_name} ${selectedCustomer.last_name}`}</p>
+    <p><strong>Items Brought:</strong> ${document.getElementById('itemsBrought').value}</p>
+    <p><strong>Estimate:</strong> $${parseFloat(document.getElementById('estimate').value).toFixed(2)}</p>
+    ${selectedItems.length > 0 ? `<p><strong>Repair Items Total:</strong> $${totalItemsAmount.toFixed(2)}</p>` : ''}
+    ${selectedItems.length > 0 ? `<p><strong>Total (Estimate + Items):</strong> $${(parseFloat(document.getElementById('estimate').value) + totalItemsAmount).toFixed(2)}</p>` : ''}
+    <div style="margin-top: 20px;">
+      <button onclick="printRepairTicket(${JSON.stringify(result).replace(/"/g, '&quot;')})" class="submit-button" style="background-color: #28a745; margin-right: 10px;">
+        Print Repair Ticket
+      </button>
     </div>
   `;
+  
+  successSection.style.display = 'block';
+}
 
-  const summaryDiv = document.createElement('div');
-  summaryDiv.id = 'repairReviewPopup';
-  summaryDiv.innerHTML = summaryHTML;
-  document.body.appendChild(summaryDiv);
+function printRepairTicket(result) {
+  // Get current data
+  const customerName = selectedCustomer === 'new' ? 
+    `${document.getElementById('firstName').value} ${document.getElementById('lastName').value}` : 
+    `${selectedCustomer.first_name} ${selectedCustomer.last_name}`;
+  
+  const customerPhone = selectedCustomer === 'new' ? 
+    document.getElementById('phone').value : 
+    selectedCustomer.phone;
+    
+  const customerEmail = selectedCustomer === 'new' ? 
+    document.getElementById('email').value : 
+    selectedCustomer.email;
 
-  Object.assign(summaryDiv.style, {
-    position: 'fixed',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    padding: '30px',
-    background: '#fff',
-    boxShadow: '0 0 15px rgba(0,0,0,0.2)',
-    zIndex: '9999',
-    maxHeight: '90vh',
-    overflowY: 'auto',
-    borderRadius: '8px',
-    width: '90%',
-    maxWidth: '600px',
-  });
+  const itemsBrought = document.getElementById('itemsBrought').value;
+  const problem = document.getElementById('problem').value;
+  const solution = document.getElementById('solution').value;
+  const estimate = parseFloat(document.getElementById('estimate').value);
+  const status = document.getElementById('status').value;
+  const dropOffDate = new Date(document.getElementById('dropOffDate').value);
+  const notes = document.getElementById('notesRepair').value;
+
+  // Create customer copy (full detailed version)
+  const customerCopy = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Repair Ticket #${result.repair_id} - Customer Copy</title>
+      <style>
+        body { 
+          font-family: Arial, sans-serif; 
+          margin: 20px; 
+          line-height: 1.4;
+          font-size: 12px;
+        }
+        .header { 
+          text-align: center; 
+          border-bottom: 2px solid #333; 
+          padding-bottom: 10px; 
+          margin-bottom: 20px;
+        }
+        .company-name { 
+          font-size: 18px; 
+          font-weight: bold; 
+          margin-bottom: 5px;
+        }
+        .ticket-title { 
+          font-size: 16px; 
+          font-weight: bold; 
+          margin-bottom: 20px;
+        }
+        .copy-type {
+          text-align: center;
+          font-size: 14px;
+          font-weight: bold;
+          color: #007bff;
+          margin-bottom: 15px;
+        }
+        .ticket-title { 
+          font-size: 16px; 
+          font-weight: bold; 
+          margin-bottom: 20px;
+        }
+        .copy-type {
+          text-align: center;
+          font-size: 14px;
+          font-weight: bold;
+          color: #007bff;
+          margin-bottom: 15px;
+        }
+        .section { 
+          margin-bottom: 15px; 
+          padding: 10px;
+          border: 1px solid #ccc;
+        }
+        .section-title { 
+          font-weight: bold; 
+          font-size: 14px; 
+          margin-bottom: 8px;
+          border-bottom: 1px solid #666;
+          padding-bottom: 3px;
+        }
+        .info-row { 
+          margin: 5px 0; 
+        }
+        .label { 
+          font-weight: bold; 
+          display: inline-block; 
+          width: 120px;
+        }
+        .items-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 10px;
+        }
+        .items-table th, .items-table td {
+          border: 1px solid #333;
+          padding: 5px;
+          text-align: left;
+        }
+        .items-table th {
+          background-color: #f0f0f0;
+          font-weight: bold;
+        }
+        .total-section {
+          margin-top: 15px;
+          padding: 10px;
+          border: 2px solid #333;
+          background-color: #f9f9f9;
+        }
+        .footer {
+          margin-top: 30px;
+          border-top: 1px solid #333;
+          padding-top: 10px;
+          text-align: center;
+          font-size: 10px;
+        }
+        @media print {
+          body { margin: 0; }
+          .no-print { display: none; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="company-name">iWoodFix-IT</div>
+        <div>Professional Repair Services</div>
+      </div>
+      
+      <div class="copy-type">CUSTOMER COPY</div>
+      <div class="ticket-title">REPAIR TICKET #${result.repair_id}</div>
+      
+      <div class="section">
+        <div class="section-title">Customer Information</div>
+        <div class="info-row"><span class="label">Name:</span> ${customerName}</div>
+        <div class="info-row"><span class="label">Phone:</span> ${customerPhone}</div>
+        <div class="info-row"><span class="label">Email:</span> ${customerEmail || 'N/A'}</div>
+      </div>
+      
+      <div class="section">
+        <div class="section-title">Repair Details</div>
+        <div class="info-row"><span class="label">Items Brought:</span> ${itemsBrought}</div>
+        <div class="info-row"><span class="label">Problem:</span> ${problem}</div>
+        <div class="info-row"><span class="label">Solution:</span> ${solution}</div>
+        <div class="info-row"><span class="label">Status:</span> ${status}</div>
+        <div class="info-row"><span class="label">Drop-off Date:</span> ${dropOffDate.toLocaleDateString()} ${dropOffDate.toLocaleTimeString()}</div>
+        ${notes ? `<div class="info-row"><span class="label">Notes:</span> ${notes}</div>` : ''}
+      </div>
+      
+      ${selectedItems.length > 0 ? `
+      <div class="section">
+        <div class="section-title">Repair Items Used</div>
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Color/Model</th>
+              <th>Price</th>
+              <th>Qty</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${selectedItems.map(item => `
+              <tr>
+                <td>${item.item_name}</td>
+                <td>${item.item_color} ${item.item_model}</td>
+                <td>$${item.price.toFixed(2)}</td>
+                <td>${item.quantity}</td>
+                <td>$${item.total.toFixed(2)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+      ` : ''}
+      
+      <div class="total-section">
+        <div class="section-title">Cost Summary</div>
+        <div class="info-row"><span class="label">Labor Estimate:</span> $${estimate.toFixed(2)}</div>
+        ${selectedItems.length > 0 ? `<div class="info-row"><span class="label">Parts/Items:</span> $${totalItemsAmount.toFixed(2)}</div>` : ''}
+        <div class="info-row" style="font-size: 16px; font-weight: bold; margin-top: 10px;">
+          <span class="label">TOTAL ESTIMATE:</span> $${(estimate + totalItemsAmount).toFixed(2)}
+        </div>
+      </div>
+      
+      <div class="footer">
+        <p>Thank you for choosing iWoodFix-IT!</p>
+        <p>This is an estimate. Final charges may vary based on actual work performed.</p>
+        <p>Please keep this ticket for your records.</p>
+      </div>
+      
+      <div class="no-print" style="margin-top: 20px; text-align: center;">
+        <button onclick="window.print()" style="padding: 10px 20px; font-size: 14px;">Print Both Copies</button>
+        <button onclick="window.close()" style="padding: 10px 20px; font-size: 14px; margin-left: 10px;">Close</button>
+      </div>
+    </body>
+    </html>
+    
+    <div style="page-break-before: always;"></div>
+    
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Repair Ticket #\${result.repair_id} - Business Copy</title>
+      <style>
+        body { 
+          font-family: Arial, sans-serif; 
+          margin: 10px; 
+          line-height: 1.2;
+          font-size: 10px;
+        }
+        .header { 
+          text-align: center; 
+          border-bottom: 1px solid #333; 
+          padding-bottom: 5px; 
+          margin-bottom: 10px;
+        }
+        .company-name { 
+          font-size: 14px; 
+          font-weight: bold; 
+          margin-bottom: 2px;
+        }
+        .ticket-title { 
+          font-size: 12px; 
+          font-weight: bold; 
+          margin-bottom: 10px;
+        }
+        .copy-type {
+          text-align: center;
+          font-size: 10px;
+          font-weight: bold;
+          color: #dc3545;
+          margin-bottom: 8px;
+        }
+        .compact-section { 
+          margin-bottom: 8px; 
+          padding: 5px;
+          border: 1px solid #ccc;
+        }
+        .compact-title { 
+          font-weight: bold; 
+          font-size: 10px; 
+          margin-bottom: 3px;
+          text-decoration: underline;
+        }
+        .compact-row { 
+          margin: 2px 0;
+          font-size: 9px; 
+        }
+        .compact-label { 
+          font-weight: bold; 
+          display: inline-block; 
+          width: 60px;
+        }
+        .total-compact {
+          background-color: #f0f0f0;
+          padding: 5px;
+          border: 1px solid #333;
+          text-align: center;
+          font-weight: bold;
+          margin-top: 8px;
+        }
+        @media print {
+          body { margin: 0; }
+          .no-print { display: none; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="company-name">iWoodFix-IT</div>
+      </div>
+      
+      <div class="copy-type">BUSINESS COPY</div>
+      <div class="ticket-title">REPAIR #${result.repair_id}</div>
+      
+      <div class="compact-section">
+        <div class="compact-title">Customer</div>
+        <div class="compact-row"><span class="compact-label">Name:</span> ${customerName}</div>
+        <div class="compact-row"><span class="compact-label">Phone:</span> ${customerPhone}</div>
+      </div>
+      
+      <div class="compact-section">
+        <div class="compact-title">Items & Problem</div>
+        <div class="compact-row"><span class="compact-label">Items:</span> ${itemsBrought}</div>
+        <div class="compact-row"><span class="compact-label">Problem:</span> ${problem.length > 50 ? problem.substring(0, 50) + '...' : problem}</div>
+        <div class="compact-row"><span class="compact-label">Status:</span> ${status}</div>
+        <div class="compact-row"><span class="compact-label">Drop-off:</span> ${dropOffDate.toLocaleDateString()}</div>
+      </div>
+      
+      <div class="total-compact">
+        TOTAL ESTIMATE: $${(estimate + totalItemsAmount).toFixed(2)}
+      </div>
+      
+      <div style="margin-top: 10px; text-align: center; font-size: 8px;">
+        Created: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
+      </div>
+    </body>
+    </html>
+  `;
+
+  // Open print window with both copies
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(customerCopy);
+  printWindow.document.close();
+  
+  // Auto-print after content loads
+  printWindow.onload = function() {
+    setTimeout(() => {
+      printWindow.print();
+    }, 250);
+  };
 }
 
 function submitRepair() {
@@ -327,11 +842,14 @@ function printRepairReview() {
 function createAnotherRepair() {
   // Reset everything
   selectedCustomer = null;
+  selectedItems = [];
+  totalItemsAmount = 0;
   
   // Reset forms
   document.getElementById('newCustomerForm').style.display = 'none';
   document.getElementById('selectedCustomer').style.display = 'none';
   document.getElementById('repairDetailsSection').style.display = 'none';
+  document.getElementById('itemSelectionSection').style.display = 'none';
   document.getElementById('successMessage').style.display = 'none';
   document.querySelector('.container').style.display = 'block';
   
@@ -353,6 +871,12 @@ function createAnotherRepair() {
   document.getElementById('notesRepair').value = '';
   document.getElementById('dropOffDate').value = '';
   document.getElementById('pickUpDate').value = '';
+  
+  // Clear item selection
+  document.getElementById('itemSearch').value = '';
+  document.getElementById('itemResults').innerHTML = '<option value="">Select an item...</option>';
+  document.getElementById('itemQuantity').value = '1';
+  updateItemsTable();
   
   updateCreateButton();
 }
@@ -376,7 +900,11 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('newCustomerBtn').addEventListener('click', showNewCustomerForm);
   document.getElementById('changeCustomerBtn').addEventListener('click', changeCustomer);
   document.getElementById('reviewRepairBtn').addEventListener('click', reviewRepair);
-  document.getElementById('createAnotherBtn').addEventListener('click', createAnotherRepair);
+  
+  // Add event listeners for item functionality
+  document.getElementById('itemSearch').addEventListener('input', debounce(searchItems, 300));
+  document.getElementById('addItemBtn').addEventListener('click', addItemToRepair);
+  document.getElementById('finalSubmitBtn').addEventListener('click', finalSubmitRepair);
 
   // Set default drop off date to now
   const now = new Date();

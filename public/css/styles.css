@@ -12,11 +12,12 @@ h1 {
 
 
 .page-container {
-  height: 100vh;
+  min-height: 100vh;
   display: flex;
   justify-content: center;
-  align-items: center; /* 🔥 Centers vertically */
+  align-items: flex-start; /* Changed from center to flex-start */
   padding: 20px;
+  padding-top: 40px; /* Add top padding for better spacing */
 }
 
 .form-wrapper {
@@ -76,7 +77,8 @@ form h2, form h3 {
   flex-wrap: wrap;
   justify-content: center;
   gap: 12px;
-  margin-top: 30px;
+  margin-top: 20px; /* Reduced from 30px */
+  flex-shrink: 0; /* Don't shrink this section */
 }
 
 .form-columns {
@@ -198,7 +200,7 @@ button:hover {
 
 /* Table Styles for Summary Pages */
 .summary-container {
-  max-width: 1400px;
+  max-width: 1800px; /* Increased from 1400px */
   width: 100%;
   margin: 0 auto;
   padding: 20px;
@@ -207,22 +209,29 @@ button:hover {
   border: 1px solid #e9ecef;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   min-height: fit-content;
+  max-height: calc(100vh - 80px); /* Limit height to viewport minus padding */
+  display: flex;
+  flex-direction: column;
 }
 
 .table-wrapper {
   overflow-x: auto;
+  overflow-y: auto;
   margin: 20px 0;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  flex: 1; /* Take remaining space */
+  max-height: 60vh; /* Limit table height to 60% of viewport */
 }
 
 .search-section {
-  margin-bottom: 30px;
-  padding: 20px;
+  margin-bottom: 20px; /* Reduced from 30px */
+  padding: 15px; /* Reduced from 20px */
   background-color: white;
   border-radius: 8px;
   border: 1px solid #e9ecef;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  flex-shrink: 0; /* Don't shrink this section */
 }
 
 .search-row {
@@ -475,15 +484,22 @@ button:hover {
 .status-badge {
   padding: 4px 8px;
   border-radius: 12px;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  display: inline-block;
 }
 
 .status-pending {
   background-color: #ffc107;
   color: #212529;
+}
+
+.status-not-started {
+  background-color: #6c757d;
+  color: white;
 }
 
 .status-in-progress {
@@ -780,7 +796,7 @@ button:hover {
 
 /* Container and Header Styling */
 .container {
-  max-width: 1000px;
+  max-width: 1200px; /* Increased from 1000px */
   margin: 0 auto;
   padding: 20px;
   background-color: #fff;
@@ -868,13 +884,37 @@ button:hover {
   padding: 12px 8px;
   text-align: left;
   font-weight: 600;
+  font-size: 14px; /* Consistent header font size */
   border-bottom: 2px solid #195a84;
+  white-space: normal; /* Allow header text to wrap if needed */
+  word-wrap: break-word;
 }
 
 .summary-table td {
   padding: 10px 8px;
   border-bottom: 1px solid #e9ecef;
   vertical-align: top;
+  font-size: 14px; /* Increased from default small size */
+  line-height: 1.4; /* Better line spacing */
+  word-wrap: break-word; /* Allow text to wrap */
+  white-space: normal; /* Allow text wrapping */
+}
+
+/* Allow text wrapping in status column and use normal font size */
+.summary-table td:nth-child(9) {
+  white-space: normal; /* Changed from nowrap to allow wrapping */
+  font-size: 14px; /* Increased from 11px */
+  min-width: 100px;
+  max-width: 150px; /* Increased max width */
+  word-wrap: break-word; /* Allow long words to break */
+  /* Removed overflow: hidden and text-overflow: ellipsis */
+}
+
+/* Also apply to status header */
+.summary-table th:nth-child(9) {
+  white-space: nowrap;
+  min-width: 100px;
+  max-width: 120px;
 }
 
 .summary-table tbody tr:hover {
@@ -941,14 +981,29 @@ button:hover {
 
 /* Enhanced responsive design for summary pages */
 @media (max-width: 768px) {
+  .page-container {
+    padding: 10px;
+    padding-top: 20px;
+  }
+  
   .summary-container {
-    margin: 10px;
-    padding: 15px;
-    max-width: calc(100% - 20px);
+    margin: 0;
+    padding: 10px;
+    max-width: 100%;
+    max-height: calc(100vh - 40px); /* Adjust for smaller padding */
+  }
+  
+  .table-wrapper {
+    max-height: 50vh; /* Smaller on mobile */
+  }
+  
+  .search-section {
+    padding: 10px;
+    margin-bottom: 15px;
   }
   
   .summary-table {
-    min-width: 800px; /* Ensures table doesn't get too cramped */
+    min-width: 1000px; /* Increased from 800px for better fit */
   }
   
   .radio-group {
@@ -973,4 +1028,68 @@ button:hover {
     padding: 6px 12px;
     font-size: 12px;
   }
+}
+
+/* Order Items Breakdown Styling */
+.items-breakdown td {
+  padding: 0 !important;
+  background-color: #f8f9fa !important;
+  border: none !important;
+}
+
+.expand-btn {
+  background-color: #17a2b8 !important;
+  color: white !important;
+  padding: 4px 8px !important;
+  font-size: 11px !important;
+  border: none !important;
+  border-radius: 3px !important;
+  cursor: pointer !important;
+  transition: background-color 0.3s ease !important;
+}
+
+.expand-btn:hover {
+  background-color: #138496 !important;
+}
+
+.items-breakdown .loading {
+  padding: 20px;
+  text-align: center;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.items-breakdown .items-container {
+  border-left: 4px solid #17a2b8;
+  background-color: white;
+}
+
+.items-breakdown .items-container h4 {
+  color: #17a2b8;
+  margin: 0 0 10px 0;
+  font-size: 16px;
+}
+
+.items-breakdown table {
+  font-size: 12px;
+  border: 1px solid #dee2e6;
+}
+
+.items-breakdown table th {
+  background-color: #f8f9fa !important;
+  color: #495057 !important;
+  font-size: 11px;
+  padding: 6px 8px !important;
+  border: 1px solid #dee2e6 !important;
+}
+
+.items-breakdown table td {
+  padding: 6px 8px !important;
+  border: 1px solid #dee2e6 !important;
+  background-color: white !important;
+}
+
+.items-breakdown table tfoot td {
+  background-color: #f8f9fa !important;
+  font-weight: bold;
 }

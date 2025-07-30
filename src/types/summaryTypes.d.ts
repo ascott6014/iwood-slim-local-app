@@ -10,9 +10,8 @@ type OrderSummary = {
   email: string;
   order_id: number;
   order_date: string; // or Date if you cast it
+  subtotal: number;
   order_items_total: number;
-  tax_amount: number;
-  final_price: number;
 };
 
 type RepairSummary = {
@@ -30,14 +29,12 @@ type RepairSummary = {
   problem: string;
   solution: string | null;
   estimate: number;
+  subtotal: number;
   status: 'Not Started' | 'In Progress' | 'Completed' | 'Unsuccessful';
   notes: string | null;
   drop_off_date: string;
   pickup_date: string | null;
   repair_items_total: number;
-  subtotal: number;
-  tax_amount: number;
-  final_price: number;
 };
 
 type InstallSummary = {
@@ -55,8 +52,6 @@ type InstallSummary = {
   estimate: number;
   install_date: string; // or Date
   notes: string | null;
-  install_items_total: number;
   subtotal: number;
-  tax_amount: number;
-  final_price: number;
+  install_items_total: number;
 };

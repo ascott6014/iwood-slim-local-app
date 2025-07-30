@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Create New Install - iWood Solutions</title>
   <link rel="stylesheet" href="css/styles.css">
+  <script src="js/stateDropdown.js"></script>
 </head>
 <body>
   <div class="container">
@@ -13,7 +14,7 @@
       <div class="nav-buttons">
         <a href="index.html" class="summary-table button">Back to Home</a>
         <a href="installs.html" class="summary-table button">Back to Installs</a>
-        <a href="install-summary.html" class="summary-table button">View Install Summary</a>
+        <a href="install-summary.html" class="summary-table button">View Install Log</a>
       </div>
     </div>
 
@@ -55,7 +56,7 @@
           </div>
           <div class="form-group">
             <label for="state">State</label>
-            <input type="text" id="state" />
+            <select id="state" required></select>
           </div>
           <div class="form-group">
             <label for="zip">ZIP Code</label>
@@ -82,9 +83,58 @@
       </div>
     </div>
 
-    <!-- Step 2: Install Details -->
+    <!-- Step 2: Item Selection -->
+    <div class="section" id="itemSelectionSection" style="display: none;">
+      <h2>Step 2: Select Items</h2>
+      
+      <!-- Item Search -->
+      <div class="form-group">
+        <h3>Add Items to Install</h3>
+        <div class="item-search-row">
+          <input type="text" id="itemSearch" placeholder="Search for items..." />
+          <select id="itemResults">
+            <option value="">Select an item...</option>
+          </select>
+          <label for="itemQuantity">Quantity:</label>
+          <input type="number" id="itemQuantity" value="1" min="1" style="width: 80px;" />
+          <button type="button" id="addItemBtn" class="summary-table button">Add Item</button>
+        </div>
+      </div>
+
+      <!-- Selected Items Table -->
+      <div class="table-container">
+        <h3>Install Items</h3>
+        <table class="summary-table">
+          <thead>
+            <tr>
+              <th>Item Name</th>
+              <th>Color</th>
+              <th>Model</th>
+              <th>Price</th>
+              <th>Quantity</th>
+              <th>Total</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="selectedItemsBody">
+            <tr id="noItemsRow">
+              <td colspan="7" style="text-align: center; color: #666;">No items added yet</td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr>
+              <th colspan="5">Install Items Total:</th>
+              <th id="installItemsTotal">$0.00</th>
+              <th></th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Step 3: Install Details -->
     <div class="section" id="installDetailsSection" style="display: none;">
-      <h2>Step 2: Install Details</h2>
+      <h2>Step 3: Install Details</h2>
       
       <div class="form-group">
         <label for="installDescription">Install Description *</label>
@@ -93,19 +143,30 @@
 
       <div class="form-row">
         <div class="form-group">
-          <label for="installEstimate">Estimated Cost *</label>
+          <label for="installEstimate">Labor Cost *</label>
           <input type="number" id="installEstimate" step="0.01" min="0" placeholder="0.00" required />
         </div>
+        <div class="form-group">
+          <label>Items Total</label>
+          <input type="text" id="displayItemsTotal" value="$0.00" disabled style="background-color: #f8f9fa;" />
+        </div>
+        <div class="form-group">
+          <label>Total Install Cost</label>
+          <input type="text" id="displayTotalCost" value="$0.00" disabled style="background-color: #e9ecef; font-weight: bold;" />
+        </div>
+      </div>
+      
+      <div class="form-row">
         <div class="form-group">
           <label for="installDate">Install Date</label>
           <input type="date" id="installDate" />
         </div>
       </div>
 
-      <!-- Review & Submit Install Button -->
+      <!-- Complete Install Button -->
       <div class="form-group" style="text-align: center; margin-top: 20px;">
-        <button type="button" id="reviewInstallBtn" class="summary-table button" style="background-color: #28a745; font-size: 18px; padding: 12px 30px;" disabled>
-          Review & Submit Install
+        <button type="button" id="previewBtn" class="summary-table button" style="background-color: #28a745; font-size: 18px; padding: 12px 30px;" disabled>
+          Complete Install
         </button>
       </div>
     </div>
@@ -121,6 +182,17 @@
     </div>
   </div>
 
+  <!-- Utility Scripts -->
+  <script src="js/utils/shared-utils.js"></script>
+  <script src="js/utils/print-utils.js"></script>
+  <script src="js/utils/customer-search.js"></script>
+  
+  <!-- Main Script -->
   <script src="js/createCompleteInstall.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      populateStateDropdown('state');
+    });
+  </script>
 </body>
 </html>

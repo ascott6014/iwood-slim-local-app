@@ -5,6 +5,7 @@
   <title>Create Repair for New Customer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="/css/styles.css" />
+  <script src="/js/stateDropdown.js"></script>
   <script src="/js/previewAndSubmit.js" defer></script>
 </head>
 <body>
@@ -22,7 +23,7 @@
             <div class="form-row"><label for="last_name">Last Name:</label><input name="last_name" id="last_name" required /></div>
             <div class="form-row"><label for="address">Address:</label><input name="address" id="address"/></div>
             <div class="form-row"><label for="city">City:</label><input name="city" id="city"/></div>
-            <div class="form-row"><label for="state">State:</label><input name="state" id="state" maxlength="2"/></div>
+            <div class="form-row"><label for="state">State:</label><select name="state" id="state" required></select></div>
             <div class="form-row"><label for="zip">ZIP Code:</label><input name="zip" id="zip"/></div>
             <div class="form-row"><label for="phone">Phone:</label><input name="phone" id="phone" required /></div>
             <div class="form-row"><label for="email">Email:</label><input name="email" id="email" type="email"/></div>
@@ -60,6 +61,12 @@
       </form>
     </div>
   </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      populateStateDropdown('state');
+    });
+  </script>
 </body>
 </html>
 

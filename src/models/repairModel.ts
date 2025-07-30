@@ -63,4 +63,36 @@ async function updateRepairStatus(repairId: number, status: string, notes?: stri
   return rows;
 }
 
-export {createCustomerAndRepair, createRepairForCustomer, updateRepairPickupDate, updateRepairStatus}
+async function addRepairItem(repairId: number, itemId: number, quantity: number) {
+  const [rows] = await db.query(
+    'CALL AddRepairItem(?, ?, ?)',
+    [repairId, itemId, quantity]
+  );
+  return rows;
+}
+
+async function getRepairItems(repairId: number) {
+  const [rows] = await db.query(
+    `SELECT 
+      ri.repair_item_id,
+      ri.repair_id,
+      ri.item_id,
+      ri.repair_item_quantity,
+      ri.total_price,
+      i.item_name,
+      i.item_color,
+      i.item_model,
+      i.description,
+      i.cost,
+      i.markup_rate,
+      (i.cost + (i.cost * i.markup_rate / 100)) as price
+    FROM repair_items ri
+    JOIN items i ON ri.item_id = i.item_id
+    WHERE ri.repair_id = ?
+    ORDER BY ri.repair_item_id`,
+    [repairId]
+  );
+  return rows;
+}
+
+export {createCustomerAndRepair, createRepairForCustomer, updateRepairPickupDate, updateRepairStatus, addRepairItem, getRepairItems}

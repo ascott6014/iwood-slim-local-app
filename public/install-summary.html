@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>IwoodFixIt – Install Summary</title>
+  <title>IwoodFixIt – Install Log</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body>
   <div class="page-container">
     <div class="form-wrapper summary-container">
-      <h1>Install Summary</h1>
+      <h1>Install Log</h1>
 
       <div class="search-section">
         <div class="search-row">
@@ -25,12 +25,20 @@
       <table class="summary-table">
         <thead>
           <tr>
+            <th>
+              <input type="checkbox" id="selectAllInstalls" onchange="toggleSelectAll('installs')">
+              <label for="selectAllInstalls">Select All</label>
+            </th>
             <th>Install ID</th>
-            <th>Customer</th>
+            <th>Customer ID</th>
+            <th>Customer Name</th>
+            <th>Phone</th>
+            <th>Description</th>
+            <th>Install Date</th>
             <th>Estimate</th>
-            <th>Items Total</th>
-            <th>Tax</th>
-            <th>Final Price</th>
+            <th>Item Total</th>
+            <th>Subtotal</th>
+            <th>Notes</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -44,10 +52,20 @@
         <button type="button" onclick="location.href='index.html'">
           🏠 Home
         </button>
+        <button type="button" id="printSelectedBtn" onclick="printSelectedInstalls()" style="background-color: #28a745;" disabled>
+          🖨️ Print Selected (<span id="selectedCount">0</span>)
+        </button>
       </div>
     </div>
   </div>
 
+  <!-- Utility Scripts -->
+  <script src="/js/utils/shared-utils.js"></script>
+  <script src="/js/utils/print-utils.js"></script>
+  <script src="/js/utils/customer-search.js"></script>
+  <script src="/js/utils/selection-manager.js"></script>
+  
+  <!-- Main Script -->
   <script src="/js/installSum.js"></script>
 </body>
 </html>

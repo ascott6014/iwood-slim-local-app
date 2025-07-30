@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>IwoodFixIt – Order Summary</title>
+  <title>IwoodFixIt – Order Log</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body>
   <div class="page-container">
     <div class="form-wrapper summary-container">
-      <h1>Order Summary</h1>
+      <h1>Order Log</h1>
 
       <div class="search-section">
         <div class="search-row">
@@ -20,17 +20,36 @@
           </select>
           <input type="hidden" id="customer_id" />
         </div>
+        
+        <div class="filter-row">
+          <div class="button-group">
+            <h4>Sort By:</h4>
+            <button type="button" class="filter-btn active" data-sort="none">No Sorting</button>
+            <button type="button" class="filter-btn" data-sort="customer-asc">Customer (A-Z)</button>
+            <button type="button" class="filter-btn" data-sort="customer-desc">Customer (Z-A)</button>
+            <button type="button" class="filter-btn" data-sort="date-newest">Newest First</button>
+            <button type="button" class="filter-btn" data-sort="date-oldest">Oldest First</button>
+            <button type="button" class="filter-btn" data-sort="amount-highest">Highest Amount</button>
+            <button type="button" class="filter-btn" data-sort="amount-lowest">Lowest Amount</button>
+          </div>
+        </div>
       </div>
 
       <table class="summary-table">
         <thead>
           <tr>
+            <th>
+              <input type="checkbox" id="selectAllOrders" onchange="toggleSelectAll('orders')">
+              <label for="selectAllOrders">Select All</label>
+            </th>
             <th>Order ID</th>
-            <th>Customer</th>
+            <th>Customer ID</th>
+            <th>Customer Name</th>
+            <th>Email</th>
+            <th>Phone</th>
             <th>Order Date</th>
-            <th>Items Total</th>
-            <th>Tax</th>
-            <th>Final Price</th>
+            <th>Subtotal</th>
+            <th>Details</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -44,10 +63,20 @@
         <button type="button" onclick="location.href='index.html'">
           🏠 Home
         </button>
+        <button type="button" id="printSelectedBtn" onclick="printSelectedOrders()" style="background-color: #28a745;" disabled>
+          🖨️ Print Selected (<span id="selectedCount">0</span>)
+        </button>
       </div>
     </div>
   </div>
 
+  <!-- Utility Scripts -->
+  <script src="/js/utils/shared-utils.js"></script>
+  <script src="/js/utils/print-utils.js"></script>
+  <script src="/js/utils/customer-search.js"></script>
+  <script src="/js/utils/selection-manager.js"></script>
+  
+  <!-- Main Script -->
   <script src="/js/orderSum.js"></script>
 </body>
 </html>
