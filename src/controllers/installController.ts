@@ -69,11 +69,11 @@ export async function handleGetInstallItemsById(req: Request, res: Response) {
     }
     
     const items = await getInstallItems(installId);
-    res.status(200).json(items);
+    return res.status(200).json(items);
   } catch (error) {
     const databaseErrorMessage = parseDatabaseError(error);
     console.log(error);
-    res.status(500).json({ message: 'Error getting install items', databaseErrorMessage });
+    return res.status(500).json({ message: 'Error getting install items', databaseErrorMessage });
   }
 }
 
@@ -86,11 +86,11 @@ export async function handleAddInstallItem(req: Request, res: Response) {
     }
     
     const result = await addInstallItem(install_id, item_id, quantity);
-    res.status(200).json({ message: 'Item added to install', result });
+    return res.status(200).json({ message: 'Item added to install', result });
   } catch (error) {
     const databaseErrorMessage = parseDatabaseError(error);
     console.log(error);
-    res.status(500).json({ message: 'Error adding item to install', databaseErrorMessage });
+    return res.status(500).json({ message: 'Error adding item to install', databaseErrorMessage });
   }
 }
 
@@ -103,11 +103,11 @@ export async function handleUpdateInstallItem(req: Request, res: Response) {
     }
     
     const result = await updateInstallItem(install_item_id, quantity);
-    res.status(200).json({ message: 'Install item updated', result });
+    return res.status(200).json({ message: 'Install item updated', result });
   } catch (error) {
     const databaseErrorMessage = parseDatabaseError(error);
     console.log(error);
-    res.status(500).json({ message: 'Error updating install item', databaseErrorMessage });
+    return res.status(500).json({ message: 'Error updating install item', databaseErrorMessage });
   }
 }
 
@@ -120,10 +120,10 @@ export async function handleRemoveInstallItem(req: Request, res: Response) {
     }
     
     const result = await removeInstallItem(install_item_id);
-    res.status(200).json({ message: 'Item removed from install', result });
+    return res.status(200).json({ message: 'Item removed from install', result });
   } catch (error) {
     const databaseErrorMessage = parseDatabaseError(error);
     console.log(error);
-    res.status(500).json({ message: 'Error removing item from install', databaseErrorMessage });
+    return res.status(500).json({ message: 'Error removing item from install', databaseErrorMessage });
   }
 }

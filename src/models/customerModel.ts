@@ -1,6 +1,28 @@
 import { db } from "../dataSource";
 
-
+// Get all customers with their most recent visit information
+export async function getCustomersWithRecentVisits(): Promise<any[]> {
+  const [rows] = await db.query(
+    `SELECT 
+       customer_id,
+       first_name,
+       last_name,
+       phone,
+       email,
+       address,
+       city,
+       state,
+       zip,
+       customer_created_at,
+       last_visit_date,
+       last_visit_type,
+       last_visit_description,
+       last_visit_status
+     FROM customer_with_recent_visit
+     ORDER BY last_visit_date DESC NULLS LAST, customer_created_at DESC`
+  );
+  return rows as any[];
+}
 
 // search by name or phone, limit 10
 export async function searchCustomers(query: string): Promise<Customer[]> {

@@ -4,6 +4,7 @@ import { parseDatabaseError } from '../utils/db-utils';
 import {
   searchCustomers,
   getCustomers,
+  getCustomersWithRecentVisits,
   addCustomer,
   updateCustomer,
   deleteCustomer,
@@ -49,6 +50,22 @@ export async function handleSearchCustomers(
     console.error('Error searching customers:', err);
     const databaseErrorMessage = parseDatabaseError(err);
     res.status(500).json({ message: 'Error searching customers', error: databaseErrorMessage });
+  }
+}
+
+// GET /customers/with-visits
+// return all customers with their most recent visit information
+export async function handleGetCustomersWithRecentVisits(
+  _req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    const customers = await getCustomersWithRecentVisits();
+    res.status(200).json(customers);
+  } catch (err) {
+    console.error('Error fetching customers with recent visits:', err);
+    const databaseErrorMessage = parseDatabaseError(err);
+    res.status(500).json({ message: 'Error fetching customers with recent visits', error: databaseErrorMessage });
   }
 }
 

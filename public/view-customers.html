@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>View All Customers - Tech Repair Shop</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>All Customers</h1>
+      <div class="nav-buttons">
+        <a href="index.html" class="summary-table button">Back to Home</a>
+        <a href="customer-form.html" class="summary-table button">Add New Customer</a>
+      </div>
+    </div>
+
+    <!-- Search Section -->
+    <div class="section">
+      <h2>Search & Filter</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="searchInput">Search Customers</label>
+          <input type="text" id="searchInput" placeholder="Search by name, phone, or email...">
+        </div>
+        <div class="form-group">
+          <label for="visitFilter">Filter by Visit Status</label>
+          <select id="visitFilter">
+            <option value="">All Customers</option>
+            <option value="has-visits">Customers with Visits</option>
+            <option value="no-visits">Customers without Visits</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <button type="button" id="clearFilters" class="summary-table button">Clear Filters</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" style="text-align: center; display: none;">
+      <p>Loading customers...</p>
+    </div>
+
+    <!-- Customer Table Section -->
+    <div class="section">
+      <h2>Customer List</h2>
+      <div id="customerTableContainer">
+        <table id="customerTable" class="summary-table" style="display: none;">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Phone</th>
+              <th>Email</th>
+              <th>Address</th>
+              <th>Last Visit</th>
+              <th>Visit Type</th>
+              <th>Visit Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="customerTableBody">
+            <!-- Table rows will be populated here -->
+          </tbody>
+        </table>
+        
+        <div id="noCustomersMessage" style="text-align: center; display: none;">
+          <p>No customers found.</p>
+          <a href="customer-form.html" class="summary-table button">Create First Customer</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Customer Stats Section -->
+    <div class="section">
+      <h2>Customer Statistics</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Total Customers</label>
+          <div id="totalCustomers" style="font-size: 24px; font-weight: bold; color: #28a745;">-</div>
+        </div>
+        <div class="form-group">
+          <label>Customers with Recent Visits</label>
+          <div id="customersWithVisits" style="font-size: 24px; font-weight: bold; color: #17a2b8;">-</div>
+        </div>
+        <div class="form-group">
+          <label>New Customers (This Month)</label>
+          <div id="newCustomersThisMonth" style="font-size: 24px; font-weight: bold; color: #ffc107;">-</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allCustomers = [];
+    let filteredCustomers = [];
+
+    document.addEventListener('DOMContentLoaded', function() {
+      loadCustomers();
+      
+      // Set up event listeners
+      document.getElementById('searchInput').addEventListener('input', filterCustomers);
+      document.getElementById('visitFilter').addEventListener('change', filterCustomers);
+      document.getElementById('clearFilters').addEventListener('click', clearFilters);
+    });
+
+    async function loadCustomers() {
+      const loadingIndicator = document.getElementById('loadingIndicator');
+      const customerTable = document.getElementById('customerTable');
+      const noCustomersMessage = document.getElementById('noCustomersMessage');
+      
+      try {
+        loadingIndicator.style.display = 'block';
+        customerTable.style.display = 'none';
+        noCustomersMessage.style.display = 'none';
+
+        const response = await fetch('/api/customers/with-visits');
+        if (!response.ok) {
+          throw new Error('Failed to fetch customers');
+        }
+
+        allCustomers = await response.json();
+        filteredCustomers = [...allCustomers];
+        
+        loadingIndicator.style.display = 'none';
+        
+        if (allCustomers.length === 0) {
+          noCustomersMessage.style.display = 'block';
+        } else {
+          customerTable.style.display = 'table';
+          displayCustomers(filteredCustomers);
+          updateStatistics();
+        }
+      } catch (error) {
+        console.error('Error loading customers:', error);
+        loadingIndicator.style.display = 'none';
+        noCustomersMessage.style.display = 'block';
+        document.querySelector('#noCustomersMessage p').textContent = 'Error loading customers. Please try again.';
+      }
+    }
+
+    function displayCustomers(customers) {
+      const tbody = document.getElementById('customerTableBody');
+      tbody.innerHTML = '';
+
+      customers.forEach(customer => {
+        const row = document.createElement('tr');
+        
+        // Format address
+        const address = formatAddress(customer.address, customer.city, customer.state, customer.zip);
+        
+        // Format last visit
+        const lastVisit = formatLastVisit(customer.last_visit_date);
+        const visitType = customer.last_visit_type || '-';
+        const visitStatus = customer.last_visit_status || '-';
+        
+        row.innerHTML = `
+          <td><strong>${customer.first_name} ${customer.last_name}</strong></td>
+          <td>${customer.phone}</td>
+          <td>${customer.email || '-'}</td>
+          <td>${address}</td>
+          <td>${lastVisit}</td>
+          <td>${visitType}</td>
+          <td><span class="status-badge ${getStatusClass(visitStatus)}">${visitStatus}</span></td>
+          <td>
+            <button onclick="viewCustomerDetails(${customer.customer_id})" class="summary-table button" style="padding: 5px 10px; font-size: 12px;">
+              View Details
+            </button>
+          </td>
+        `;
+        
+        tbody.appendChild(row);
+      });
+    }
+
+    function formatAddress(address, city, state, zip) {
+      if (!address && !city && !state && !zip) return '-';
+      
+      const parts = [];
+      if (address) parts.push(address);
+      if (city) parts.push(city);
+      if (state) parts.push(state);
+      if (zip) parts.push(zip);
+      
+      return parts.join(', ');
+    }
+
+    function formatLastVisit(visitDate) {
+      if (!visitDate) return 'No visits';
+      
+      const date = new Date(visitDate);
+      const now = new Date();
+      const diffTime = Math.abs(now - date);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 1) return 'Yesterday';
+      if (diffDays < 7) return `${diffDays} days ago`;
+      if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
+      if (diffDays < 365) return `${Math.ceil(diffDays / 30)} months ago`;
+      
+      return date.toLocaleDateString();
+    }
+
+    function getStatusClass(status) {
+      switch (status?.toLowerCase()) {
+        case 'completed': return 'status-completed';
+        case 'in progress': return 'status-in-progress';
+        case 'pending': return 'status-pending';
+        case 'cancelled': return 'status-cancelled';
+        default: return 'status-unknown';
+      }
+    }
+
+    function filterCustomers() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+      const visitFilter = document.getElementById('visitFilter').value;
+      
+      filteredCustomers = allCustomers.filter(customer => {
+        // Search filter
+        const matchesSearch = !searchTerm || 
+          customer.first_name.toLowerCase().includes(searchTerm) ||
+          customer.last_name.toLowerCase().includes(searchTerm) ||
+          customer.phone.includes(searchTerm) ||
+          (customer.email && customer.email.toLowerCase().includes(searchTerm));
+        
+        // Visit filter
+        let matchesVisitFilter = true;
+        if (visitFilter === 'has-visits') {
+          matchesVisitFilter = customer.last_visit_date !== null;
+        } else if (visitFilter === 'no-visits') {
+          matchesVisitFilter = customer.last_visit_date === null;
+        }
+        
+        return matchesSearch && matchesVisitFilter;
+      });
+      
+      displayCustomers(filteredCustomers);
+      updateStatistics();
+    }
+
+    function clearFilters() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('visitFilter').value = '';
+      filteredCustomers = [...allCustomers];
+      displayCustomers(filteredCustomers);
+      updateStatistics();
+    }
+
+    function updateStatistics() {
+      const totalCustomers = allCustomers.length;
+      const customersWithVisits = allCustomers.filter(c => c.last_visit_date).length;
+      
+      // Calculate new customers this month
+      const thisMonth = new Date();
+      thisMonth.setDate(1);
+      const newCustomersThisMonth = allCustomers.filter(c => {
+        const createdDate = new Date(c.customer_created_at);
+        return createdDate >= thisMonth;
+      }).length;
+      
+      document.getElementById('totalCustomers').textContent = totalCustomers;
+      document.getElementById('customersWithVisits').textContent = customersWithVisits;
+      document.getElementById('newCustomersThisMonth').textContent = newCustomersThisMonth;
+    }
+
+    function viewCustomerDetails(customerId) {
+      // This could navigate to a customer detail page or open a modal
+      alert(`Customer details for ID: ${customerId}\n\nThis could open a detailed customer view with visit history, orders, repairs, etc.`);
+    }
+  </script>
+
+  <style>
+    .status-badge {
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    
+    .status-completed {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    
+    .status-in-progress {
+      background-color: #d1ecf1;
+      color: #0c5460;
+    }
+    
+    .status-pending {
+      background-color: #fff3cd;
+      color: #856404;
+    }
+    
+    .status-cancelled {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    
+    .status-unknown {
+      background-color: #e2e3e5;
+      color: #495057;
+    }
+    
+    #customerTable {
+      width: 100%;
+      margin-top: 20px;
+    }
+    
+    #customerTable th,
+    #customerTable td {
+      text-align: left;
+      padding: 12px 8px;
+      border-bottom: 1px solid #dee2e6;
+    }
+    
+    #customerTable th {
+      background-color: #f8f9fa;
+      font-weight: bold;
+      position: sticky;
+      top: 0;
+    }
+    
+    #customerTable tbody tr:hover {
+      background-color: #f8f9fa;
+    }
+  </style>
+</body>
+</html>
