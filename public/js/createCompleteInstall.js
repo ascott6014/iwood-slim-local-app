@@ -223,6 +223,8 @@ function updateTotalCosts() {
 }
 
 async function createInstall() {
+  console.log('createInstall function called');
+  
   if (!selectedCustomer) {
     alert('Please select a customer');
     return;
@@ -231,6 +233,8 @@ async function createInstall() {
   const description = document.getElementById('installDescription').value.trim();
   const estimate = document.getElementById('installEstimate').value;
   const installDate = document.getElementById('installDate').value;
+
+  console.log('Form data:', { description, estimate, installDate, selectedCustomer, selectedItems });
 
   if (!description || !estimate) {
     alert('Please fill in the install description and estimated cost');
@@ -277,7 +281,7 @@ async function createInstall() {
       endpoint = '/installs/create-customer-install';
     } else {
       installData.customer_id = selectedCustomer.customer_id;
-      endpoint = '/create-install';
+      endpoint = '/installs/create-install';
     }
 
     const response = await fetch(endpoint, {
@@ -288,7 +292,11 @@ async function createInstall() {
       body: JSON.stringify(installData)
     });
 
+    console.log('Response status:', response.status);
+    console.log('Response headers:', response.headers);
+    
     const result = await response.json();
+    console.log('Response result:', result);
 
     if (response.ok) {
       // Show success message with summary and print option

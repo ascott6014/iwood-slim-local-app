@@ -65,8 +65,8 @@
 
         <!-- Submit Button -->
         <div class="form-group" style="text-align: center; margin-top: 20px;">
-          <button type="submit" class="summary-table button" style="background-color: #28a745; font-size: 18px; padding: 12px 30px;">
-            Create Customer
+          <button type="button" id="completeBtn" class="summary-table button" style="background-color: #28a745; font-size: 18px; padding: 12px 30px;">
+            Complete Customer
           </button>
         </div>
       </form>
@@ -76,10 +76,6 @@
     <div id="successMessage" style="display: none;" class="section">
       <h2 style="color: #28a745;">Customer Created Successfully!</h2>
       <div id="customerDetails"></div>
-      <div style="margin-top: 20px;">
-        <button type="button" id="createAnotherBtn" class="summary-table button">Create Another Customer</button>
-        <a href="index.html" class="summary-table button">Back to Home</a>
-      </div>
     </div>
   </div>
 
@@ -91,7 +87,162 @@
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       populateStateDropdown('state');
+      
+      // Add event listener for the Complete Customer button
+      const completeBtn = document.getElementById('completeBtn');
+      
+      if (completeBtn) {
+        completeBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          
+          // Get form data
+          const form = document.getElementById('mainForm');
+          const formData = new FormData(form);
+          
+          // Validate required fields
+          if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+          }
+          
+          // Convert FormData to JSON
+          const data = {};
+          for (let [key, value] of formData.entries()) {
+            data[key] = value;
+          }
+          
+          // Disable button and show loading
+          completeBtn.disabled = true;
+          completeBtn.textContent = 'Creating Customer...';
+          
+          // Submit to server
+          fetch('/createCustomer', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+          })
+          .then(response => response.json())
+          .then(result => {
+            if (result.message && result.message.includes('created')) {
+              showCustomerSuccess(result);
+            } else {
+              alert('Error creating customer: ' + (result.message || 'Unknown error'));
+              completeBtn.disabled = false;
+              completeBtn.textContent = 'Complete Customer';
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            alert('Error creating customer. Please try again.');
+            completeBtn.disabled = false;
+            completeBtn.textContent = 'Complete Customer';
+          });
+        });
+      }
     });
+    
+    function showCustomerSuccess(result) {
+      // Hide the form section
+      document.querySelector('.section').style.display = 'none';
+      
+      const successSection = document.getElementById('successMessage');
+      const detailsDiv = document.getElementById('customerDetails');
+      
+      // Get form data for display
+      const firstName = document.getElementById('first_name').value;
+      const lastName = document.getElementById('last_name').value;
+      const phone = document.getElementById('phone').value;
+      const email = document.getElementById('email').value;
+      const address = document.getElementById('address').value;
+      const city = document.getElementById('city').value;
+      const state = document.getElementById('state').value;
+      const zip = document.getElementById('zip').value;
+      
+      detailsDiv.innerHTML = `
+        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+          <p><strong>Customer ID:</strong> ${result.customer_id || 'Generated'}</p>
+          <p><strong>Name:</strong> ${firstName} ${lastName}</p>
+          <p><strong>Phone:</strong> ${phone}</p>
+          <p><strong>Email:</strong> ${email || 'N/A'}</p>
+          <p><strong>Address:</strong> ${address ? `${address}, ${city}, ${state} ${zip}` : 'N/A'}</p>
+          
+          <div style="text-align: center; margin-top: 30px;">
+            <button onclick="printCustomerInfo()" style="background-color: #17a2b8; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; margin-right: 10px; font-size: 16px;">
+              🖨️ Print Customer Info
+            </button>
+            <button onclick="createAnotherCustomer()" style="background-color: #28a745; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; margin-right: 10px; font-size: 16px;">
+              ➕ Create Another Customer
+            </button>
+            <button onclick="location.href='index.html'" style="background-color: #6c757d; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; font-size: 16px;">
+              🏠 Back to Home
+            </button>
+          </div>
+        </div>
+      `;
+      
+      successSection.style.display = 'block';
+    }
+    
+    function printCustomerInfo() {
+      const customerDetails = document.getElementById('customerDetails').innerHTML;
+      
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Customer Information</title>
+          <style>
+            body { 
+              font-family: Arial, sans-serif; 
+              margin: 20px; 
+              color: #333;
+            }
+            h2 { 
+              color: #28a745; 
+              text-align: center;
+            }
+            @media print {
+              button { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <h2>Customer Created Successfully!</h2>
+          ${customerDetails}
+          <div style="margin-top: 30px; text-align: center; font-size: 12px; color: #666;">
+            Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}
+          </div>
+        </body>
+        </html>
+      `);
+      printWindow.document.close();
+      
+      printWindow.onload = function() {
+        setTimeout(() => {
+          printWindow.print();
+        }, 250);
+      };
+    }
+    
+    function createAnotherCustomer() {
+      // Reset form
+      document.getElementById('mainForm').reset();
+      
+      // Re-populate state dropdown
+      populateStateDropdown('state');
+      
+      // Hide success and show form
+      document.getElementById('successMessage').style.display = 'none';
+      document.querySelector('.section').style.display = 'block';
+      
+      // Re-enable button
+      const completeBtn = document.getElementById('completeBtn');
+      completeBtn.disabled = false;
+      completeBtn.textContent = 'Complete Customer';
+    }
   </script>
 </body>
 </html>
