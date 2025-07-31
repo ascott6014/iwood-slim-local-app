@@ -26,6 +26,7 @@ export async function handleCreateOrderForCustomer(req: Request, res: Response) 
 
 export async function handleCreateCompleteOrder(req: Request, res: Response) {
   try {
+    console.log('Received request body:', JSON.stringify(req.body, null, 2));
     const result = await createCompleteOrder(req.body);
     res.status(200).json({ 
       message: 'Order created successfully with items', 

@@ -240,6 +240,9 @@ function updateItemsTable() {
 }
 
 async function createOrder() {
+  console.log('selectedCustomer:', selectedCustomer);
+  console.log('selectedItems:', selectedItems);
+  
   if (!selectedCustomer || selectedItems.length === 0) {
     alert('Please select a customer and add items to the order');
     return;
@@ -283,6 +286,8 @@ async function createOrder() {
     } else {
       orderData.customer_id = selectedCustomer.customer_id;
     }
+
+    console.log('Sending orderData:', JSON.stringify(orderData, null, 2));
 
     const response = await fetch('/orders/create-complete-order', {
       method: 'POST',
@@ -453,43 +458,15 @@ function printOrderReview() {
   }
 }
 
-function createAnotherOrder() {
-  // Reset everything
-  selectedCustomer = null;
-  selectedItems = [];
-  
-  // Reset forms
-  document.getElementById('newCustomerForm').style.display = 'none';
-  document.getElementById('selectedCustomer').style.display = 'none';
-  document.getElementById('itemSelectionSection').style.display = 'none';
-  document.getElementById('successMessage').style.display = 'none';
-  document.querySelector('.container').style.display = 'block';
-  
-  // Clear form inputs
-  document.getElementById('customerSearch').value = '';
-  document.getElementById('firstName').value = '';
-  document.getElementById('lastName').value = '';
-  document.getElementById('address').value = '';
-  document.getElementById('city').value = '';
-  document.getElementById('state').value = '';
-  document.getElementById('zip').value = '';
-  document.getElementById('phone').value = '';
-  document.getElementById('email').value = '';
-  
-  updateItemsTable();
-}
-
 function showOrderSuccess(result) {
-  // Hide the order form sections
-  document.querySelector('.container').style.display = 'none';
-  
+  // Don't hide the form sections - just show the success message at the bottom
   const successSection = document.getElementById('successMessage');
   const detailsDiv = document.getElementById('orderDetails');
   
   // Calculate total
   let totalAmount = 0;
   selectedItems.forEach(item => {
-    totalAmount += item.total;
+    totalAmount += (parseFloat(item.price) * item.quantity);
   });
   
   detailsDiv.innerHTML = `
@@ -500,9 +477,11 @@ function showOrderSuccess(result) {
     <p><strong>Total Items:</strong> ${selectedItems.length}</p>
     <p><strong>Total Amount:</strong> $${totalAmount.toFixed(2)}</p>
     <div style="margin-top: 20px;">
-      <button onclick="printOrderTicket(${JSON.stringify(result).replace(/"/g, '&quot;')})" class="submit-button" style="background-color: #28a745; margin-right: 10px;">
+      <button type="button" onclick="printOrderTicket({order_id: ${result.order_id}, customer_id: ${result.customer_id}})" class="submit-button" style="background-color: #28a745; margin-right: 10px;">
         Print Order Ticket
       </button>
+      <br><br>
+      <button type="button" onclick="location.href='index.html'">⬅️ Back to Home</button>
     </div>
   `;
   
@@ -530,7 +509,7 @@ function printOrderTicket(result) {
   // Calculate total
   let totalAmount = 0;
   selectedItems.forEach(item => {
-    totalAmount += item.total;
+    totalAmount += (parseFloat(item.price) * item.quantity);
   });
 
   // Create customer copy (full detailed version)
@@ -625,7 +604,6 @@ function printOrderTicket(result) {
     <body>
       <div class="header">
         <div class="company-name">iWoodFix-IT</div>
-        <div>Professional Wood & Furniture Solutions</div>
       </div>
       
       <div class="copy-type">CUSTOMER COPY</div>
@@ -656,9 +634,9 @@ function printOrderTicket(result) {
               <tr>
                 <td>${item.item_name}</td>
                 <td>${item.item_color} ${item.item_model}</td>
-                <td>$${item.price.toFixed(2)}</td>
+                <td>$${parseFloat(item.price).toFixed(2)}</td>
                 <td>${item.quantity}</td>
-                <td>$${item.total.toFixed(2)}</td>
+                <td>$${(parseFloat(item.price) * item.quantity).toFixed(2)}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -822,7 +800,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('changeCustomerBtn').addEventListener('click', changeCustomer);
   document.getElementById('addItemBtn').addEventListener('click', addItemToOrder);
   document.getElementById('previewBtn').addEventListener('click', updateFormAndPreview);
-  document.getElementById('createAnotherBtn').addEventListener('click', createAnotherOrder);
 
   // Hide customer results when clicking elsewhere
   document.addEventListener('click', (e) => {
@@ -831,50 +808,3 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
-
-function updateFormAndPreview() {
-  // Validate that we have customer and items
-  if (!selectedCustomer) {
-    alert('Please select a customer first');
-    return;
-  }
-  
-  if (selectedItems.length === 0) {
-    alert('Please add at least one item to the order');
-    return;
-  }
-  
-  // Update hidden form fields for preview
-  if (selectedCustomer && selectedCustomer !== 'new') {
-    document.getElementById('hidden_customer_id').value = selectedCustomer.customer_id;
-    document.getElementById('hidden_customer_name').value = `${selectedCustomer.first_name} ${selectedCustomer.last_name}`;
-    document.getElementById('hidden_customer_phone').value = selectedCustomer.phone;
-    document.getElementById('hidden_customer_email').value = selectedCustomer.email || '';
-    document.getElementById('hidden_customer_address').value = `${selectedCustomer.address}, ${selectedCustomer.city}, ${selectedCustomer.state} ${selectedCustomer.zip}`;
-  } else if (selectedCustomer === 'new') {
-    const firstName = document.getElementById('firstName').value;
-    const lastName = document.getElementById('lastName').value;
-    const phone = document.getElementById('phone').value;
-    const email = document.getElementById('email').value;
-    const address = document.getElementById('address').value;
-    const city = document.getElementById('city').value;
-    const state = document.getElementById('state').value;
-    const zip = document.getElementById('zip').value;
-    
-    if (!firstName || !lastName || !phone) {
-      alert('Please fill in the required customer information (First Name, Last Name, Phone)');
-      return;
-    }
-    
-    document.getElementById('hidden_customer_id').value = 'new';
-    document.getElementById('hidden_customer_name').value = `${firstName} ${lastName}`;
-    document.getElementById('hidden_customer_phone').value = phone;
-    document.getElementById('hidden_customer_email').value = email;
-    document.getElementById('hidden_customer_address').value = `${address}, ${city}, ${state} ${zip}`;
-  }
-  
-  // Update items and total
-  document.getElementById('hidden_order_items').value = JSON.stringify(selectedItems);
-  const total = selectedItems.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
-  document.getElementById('hidden_order_total').value = total.toFixed(2);
-}
