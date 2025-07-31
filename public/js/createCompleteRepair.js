@@ -490,9 +490,11 @@ function showRepairSuccess(result) {
     ${selectedItems.length > 0 ? `<p><strong>Repair Items Total:</strong> $${totalItemsAmount.toFixed(2)}</p>` : ''}
     ${selectedItems.length > 0 ? `<p><strong>Total (Estimate + Items):</strong> $${(parseFloat(document.getElementById('estimate').value) + totalItemsAmount).toFixed(2)}</p>` : ''}
     <div style="margin-top: 20px;">
-      <button onclick="printRepairTicket(${JSON.stringify(result).replace(/"/g, '&quot;')})" class="submit-button" style="background-color: #28a745; margin-right: 10px;">
+      <button type="button" onclick="printRepairTicket({repair_id: ${result.repair_id}})" class="submit-button" style="background-color: #28a745; margin-right: 10px;">
         Print Repair Ticket
       </button>
+      <br><br>
+      <button type="button" onclick="location.href='index.html'">⬅️ Back to Home</button>
     </div>
   `;
   
