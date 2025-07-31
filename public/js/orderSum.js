@@ -63,7 +63,147 @@ function printSelectedOrders() {
     return;
   }
   
-  printOrderList(selectedOrders);
+  printOrderListWithItems(selectedOrders);
+}
+
+async function printOrderListWithItems(orders) {
+  // Fetch items for each order
+  const ordersWithItems = await Promise.all(
+    orders.map(async (order) => {
+      try {
+        const response = await fetch(`/api/orders/${order.order_id}/items`);
+        const items = await response.json();
+        return { ...order, items };
+      } catch (error) {
+        console.error(`Error loading items for order ${order.order_id}:`, error);
+        return { ...order, items: [] };
+      }
+    })
+  );
+
+  const printContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Order Report - ${new Date().toLocaleDateString()}</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .order-section { margin-bottom: 40px; page-break-inside: avoid; }
+        .order-header { 
+          background-color: #e9ecef; 
+          padding: 10px; 
+          margin-bottom: 15px; 
+          border: 2px solid #ddd;
+          font-weight: bold;
+          font-size: 16px;
+        }
+        .order-info { 
+          display: grid; 
+          grid-template-columns: 1fr 1fr; 
+          gap: 10px; 
+          margin-bottom: 15px; 
+          padding: 10px;
+          border: 1px solid #ddd;
+        }
+        .order-info div { margin: 5px 0; }
+        .items-table { 
+          width: 100%; 
+          border-collapse: collapse; 
+          margin-bottom: 15px; 
+        }
+        .items-table th, .items-table td { 
+          border: 1px solid #ddd; 
+          padding: 8px; 
+          text-align: left; 
+        }
+        .items-table th { 
+          background-color: #f5f5f5; 
+          font-weight: bold; 
+        }
+        .items-total { 
+          background-color: #f8f9fa; 
+          font-weight: bold; 
+        }
+        .no-items { 
+          text-align: center; 
+          color: #666; 
+          font-style: italic; 
+          padding: 20px; 
+        }
+        @media print { 
+          body { margin: 0; } 
+          .order-section { page-break-inside: avoid; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>iWoodFix-IT Detailed Order Report</h1>
+        <p>Generated on: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</p>
+        <p>Total Orders: ${ordersWithItems.length}</p>
+      </div>
+      
+      ${ordersWithItems.map(order => `
+        <div class="order-section">
+          <div class="order-header">
+            Order #${order.order_id} - ${order.first_name} ${order.last_name}
+          </div>
+          
+          <div class="order-info">
+            <div><strong>Customer ID:</strong> ${order.customer_id || 'N/A'}</div>
+            <div><strong>Phone:</strong> ${order.phone || 'N/A'}</div>
+            <div><strong>Email:</strong> ${order.email || 'N/A'}</div>
+            <div><strong>Order Date:</strong> ${new Date(order.order_date).toLocaleDateString()}</div>
+            <div><strong>Subtotal:</strong> $${order.subtotal ? parseFloat(order.subtotal).toFixed(2) : '0.00'}</div>
+          </div>
+          
+          ${order.items && order.items.length > 0 ? `
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th>Item Name</th>
+                  <th>Color/Model</th>
+                  <th>Unit Price</th>
+                  <th>Quantity</th>
+                  <th>Total Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${order.items.map(item => `
+                  <tr>
+                    <td>${item.item_name}</td>
+                    <td>${item.item_color} ${item.item_model}</td>
+                    <td>$${parseFloat(item.price).toFixed(2)}</td>
+                    <td>${item.order_item_quantity}</td>
+                    <td>$${parseFloat(item.total_price).toFixed(2)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+              <tfoot>
+                <tr class="items-total">
+                  <td colspan="4"><strong>Items Total:</strong></td>
+                  <td><strong>$${order.items.reduce((sum, item) => sum + parseFloat(item.total_price), 0).toFixed(2)}</strong></td>
+                </tr>
+              </tfoot>
+            </table>
+          ` : '<div class="no-items">No items found for this order</div>'}
+        </div>
+      `).join('')}
+      
+      <script>
+        window.onload = function() { 
+          window.print(); 
+          setTimeout(() => window.close(), 1000);
+        }
+      </script>
+    </body>
+    </html>
+  `;
+  
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(printContent);
+  printWindow.document.close();
 }
 
 function printOrderList(orders) {

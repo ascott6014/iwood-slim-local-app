@@ -79,6 +79,7 @@ async function loadRepairs() {
       if (checkbox) {
         checkbox.dataset.itemData = JSON.stringify({
           repair_id: r.repair_id,
+          customer_id: r.customer_id,
           first_name: r.first_name,
           last_name: r.last_name,
           phone: r.phone,
@@ -327,82 +328,163 @@ function printSelectedRepairs() {
     return;
   }
   
-  // Create a combined print document with all selected repairs
-  let combinedHTML = '';
-  
-  selectedRepairs.forEach((repair, index) => {
-    const customerName = `${repair.first_name} ${repair.last_name}`;
-    const dropOffDate = new Date(repair.drop_off_date);
-    const estimate = parseFloat(repair.estimate) || 0;
-    const itemsTotal = parseFloat(repair.repair_items_total) || 0;
-    const totalAmount = estimate + itemsTotal;
-    
-    const repairData = {
-      ticketId: repair.repair_id,
-      customerName: customerName,
-      customerPhone: repair.phone,
-      customerEmail: repair.email,
-      items: [], // TODO: Fetch actual repair items if needed
-      totalAmount: totalAmount,
-      specificFields: {
-        itemsBrought: repair.items_brought,
-        problem: repair.problem,
-        solution: repair.solution,
-        status: repair.status,
-        dropOffDate: dropOffDate.toLocaleDateString() + ' ' + dropOffDate.toLocaleTimeString(),
-        notes: repair.notes,
-        laborCost: estimate
+  printRepairListWithItems(selectedRepairs);
+}
+
+async function printRepairListWithItems(repairs) {
+  // Fetch items for each repair
+  const repairsWithItems = await Promise.all(
+    repairs.map(async (repair) => {
+      try {
+        const response = await fetch(`/api/repairs/${repair.repair_id}/items`);
+        const items = await response.json();
+        return { ...repair, items };
+      } catch (error) {
+        console.error(`Error loading items for repair ${repair.repair_id}:`, error);
+        return { ...repair, items: [] };
       }
-    };
-    
-    // Generate customer and business copies for this repair
-    if (window.PrintUtils) {
-      const customerCopy = window.PrintUtils.generateCustomerCopy(repairData, 'repair');
-      const businessCopy = window.PrintUtils.generateBusinessCopy(repairData, 'repair');
+    })
+  );
+
+  const printContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Repair Report - ${new Date().toLocaleDateString()}</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .repair-section { margin-bottom: 40px; page-break-inside: avoid; }
+        .repair-header { 
+          background-color: #e9ecef; 
+          padding: 10px; 
+          margin-bottom: 15px; 
+          border: 2px solid #ddd;
+          font-weight: bold;
+          font-size: 16px;
+        }
+        .repair-info { 
+          display: grid; 
+          grid-template-columns: 1fr 1fr; 
+          gap: 10px; 
+          margin-bottom: 15px; 
+          padding: 10px;
+          border: 1px solid #ddd;
+        }
+        .repair-info div { margin: 5px 0; }
+        .status-badge { 
+          padding: 3px 8px; 
+          border-radius: 4px; 
+          font-size: 12px; 
+          font-weight: bold; 
+        }
+        .status-pending { background-color: #fff3cd; color: #856404; }
+        .status-in-progress { background-color: #d1ecf1; color: #0c5460; }
+        .status-completed { background-color: #d4edda; color: #155724; }
+        .status-cancelled { background-color: #f8d7da; color: #721c24; }
+        .items-table { 
+          width: 100%; 
+          border-collapse: collapse; 
+          margin-bottom: 15px; 
+        }
+        .items-table th, .items-table td { 
+          border: 1px solid #ddd; 
+          padding: 8px; 
+          text-align: left; 
+        }
+        .items-table th { 
+          background-color: #f5f5f5; 
+          font-weight: bold; 
+        }
+        .items-total { 
+          background-color: #f8f9fa; 
+          font-weight: bold; 
+        }
+        .no-items { 
+          text-align: center; 
+          color: #666; 
+          font-style: italic; 
+          padding: 20px; 
+        }
+        @media print { 
+          body { margin: 0; } 
+          .repair-section { page-break-inside: avoid; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>iWoodFix-IT Detailed Repair Report</h1>
+        <p>Generated on: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</p>
+        <p>Total Repairs: ${repairsWithItems.length}</p>
+      </div>
       
-      // Add page break between different repairs
-      if (index > 0) {
-        combinedHTML += '<div style="page-break-before: always;"></div>';
-      }
+      ${repairsWithItems.map(repair => `
+        <div class="repair-section">
+          <div class="repair-header">
+            Repair #${repair.repair_id} - ${repair.first_name} ${repair.last_name}
+          </div>
+          
+          <div class="repair-info">
+            <div><strong>Customer ID:</strong> ${repair.customer_id || 'N/A'}</div>
+            <div><strong>Phone:</strong> ${repair.phone || 'N/A'}</div>
+            <div><strong>Email:</strong> ${repair.email || 'N/A'}</div>
+            <div><strong>Drop-off Date:</strong> ${new Date(repair.drop_off_date).toLocaleDateString()}</div>
+            <div><strong>Items Brought:</strong> ${repair.items_brought || 'N/A'}</div>
+            <div><strong>Problem:</strong> ${repair.problem || 'N/A'}</div>
+            <div><strong>Solution:</strong> ${repair.solution || 'N/A'}</div>
+            <div><strong>Status:</strong> <span class="status-badge status-${repair.status.toLowerCase().replace(/\s+/g, '-')}">${repair.status}</span></div>
+            <div><strong>Estimate:</strong> $${repair.estimate ? parseFloat(repair.estimate).toFixed(2) : '0.00'}</div>
+            <div><strong>Item Total:</strong> $${repair.repair_items_total ? parseFloat(repair.repair_items_total).toFixed(2) : '0.00'}</div>
+            <div style="grid-column: 1 / -1;"><strong>Notes:</strong> ${repair.notes || 'N/A'}</div>
+          </div>
+          
+          ${repair.items && repair.items.length > 0 ? `
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th>Item Name</th>
+                  <th>Color/Model</th>
+                  <th>Unit Price</th>
+                  <th>Quantity</th>
+                  <th>Total Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${repair.items.map(item => `
+                  <tr>
+                    <td>${item.item_name}</td>
+                    <td>${item.item_color} ${item.item_model}</td>
+                    <td>$${parseFloat(item.price).toFixed(2)}</td>
+                    <td>${item.repair_item_quantity}</td>
+                    <td>$${parseFloat(item.total_price).toFixed(2)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+              <tfoot>
+                <tr class="items-total">
+                  <td colspan="4"><strong>Items Total:</strong></td>
+                  <td><strong>$${repair.items.reduce((sum, item) => sum + parseFloat(item.total_price), 0).toFixed(2)}</strong></td>
+                </tr>
+              </tfoot>
+            </table>
+          ` : '<div class="no-items">No items found for this repair</div>'}
+        </div>
+      `).join('')}
       
-      combinedHTML += customerCopy + businessCopy;
-    }
-  });
+      <script>
+        window.onload = function() { 
+          window.print(); 
+          setTimeout(() => window.close(), 1000);
+        }
+      </script>
+    </body>
+    </html>
+  `;
   
-  if (combinedHTML) {
-    // Open print window with all selected repairs
-    const printWindow = window.open('', '_blank');
-    printWindow.document.write(combinedHTML);
-    printWindow.document.close();
-    
-    // Auto-print after content loads
-    printWindow.onload = function() {
-      setTimeout(() => {
-        printWindow.print();
-      }, 250);
-    };
-    
-    window.SharedUtils.showNotification(`Printing ${selectedRepairs.length} repair ticket(s)`, 'success');
-  } else {
-    // Fallback to individual print function
-    selectedRepairs.forEach(repair => {
-      printIndividualRepairTicket(
-        repair.repair_id,
-        repair.first_name,
-        repair.last_name,
-        repair.phone,
-        repair.email,
-        repair.items_brought,
-        repair.problem,
-        repair.solution,
-        repair.estimate,
-        repair.status,
-        repair.drop_off_date,
-        repair.notes,
-        repair.repair_items_total
-      );
-    });
-  }
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(printContent);
+  printWindow.document.close();
 }
 
 function printRepairTicket() {
