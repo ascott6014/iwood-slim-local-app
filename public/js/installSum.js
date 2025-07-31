@@ -63,7 +63,149 @@ function printSelectedInstalls() {
     return;
   }
   
-  printInstallList(selectedInstalls);
+  printInstallListWithItems(selectedInstalls);
+}
+
+async function printInstallListWithItems(installs) {
+  // Fetch items for each install
+  const installsWithItems = await Promise.all(
+    installs.map(async (install) => {
+      try {
+        const response = await fetch(`/installs/${install.install_id}/items`);
+        const items = await response.json();
+        return { ...install, items };
+      } catch (error) {
+        console.error(`Error loading items for install ${install.install_id}:`, error);
+        return { ...install, items: [] };
+      }
+    })
+  );
+
+  const printContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Install Report - ${new Date().toLocaleDateString()}</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .install-section { margin-bottom: 40px; page-break-inside: avoid; }
+        .install-header { 
+          background-color: #e9ecef; 
+          padding: 10px; 
+          margin-bottom: 15px; 
+          border: 2px solid #ddd;
+          font-weight: bold;
+          font-size: 16px;
+        }
+        .install-info { 
+          display: grid; 
+          grid-template-columns: 1fr 1fr; 
+          gap: 10px; 
+          margin-bottom: 15px; 
+          padding: 10px;
+          border: 1px solid #ddd;
+        }
+        .install-info div { margin: 5px 0; }
+        .items-table { 
+          width: 100%; 
+          border-collapse: collapse; 
+          margin-bottom: 15px; 
+        }
+        .items-table th, .items-table td { 
+          border: 1px solid #ddd; 
+          padding: 8px; 
+          text-align: left; 
+        }
+        .items-table th { 
+          background-color: #f5f5f5; 
+          font-weight: bold; 
+        }
+        .items-total { 
+          background-color: #f8f9fa; 
+          font-weight: bold; 
+        }
+        .no-items { 
+          text-align: center; 
+          color: #666; 
+          font-style: italic; 
+          padding: 20px; 
+        }
+        @media print { 
+          body { margin: 0; } 
+          .install-section { page-break-inside: avoid; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>iWoodFix-IT Detailed Install Report</h1>
+        <p>Generated on: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</p>
+        <p>Total Installs: ${installsWithItems.length}</p>
+      </div>
+      
+      ${installsWithItems.map(install => `
+        <div class="install-section">
+          <div class="install-header">
+            Install #${install.install_id} - ${install.first_name} ${install.last_name}
+          </div>
+          
+          <div class="install-info">
+            <div><strong>Customer ID:</strong> ${install.customer_id || 'N/A'}</div>
+            <div><strong>Phone:</strong> ${install.phone || 'N/A'}</div>
+            <div><strong>Install Date:</strong> ${new Date(install.install_date).toLocaleDateString()}</div>
+            <div><strong>Description:</strong> ${install.description || 'N/A'}</div>
+            <div><strong>Estimate:</strong> $${install.estimate ? parseFloat(install.estimate).toFixed(2) : '0.00'}</div>
+            <div><strong>Subtotal:</strong> $${install.subtotal ? parseFloat(install.subtotal).toFixed(2) : '0.00'}</div>
+            <div style="grid-column: 1 / -1;"><strong>Notes:</strong> ${install.notes || 'N/A'}</div>
+          </div>
+          
+          ${install.items && install.items.length > 0 ? `
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th>Item Name</th>
+                  <th>Color/Model</th>
+                  <th>Unit Price</th>
+                  <th>Quantity</th>
+                  <th>Total Price</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${install.items.map(item => `
+                  <tr>
+                    <td>${item.item_name}</td>
+                    <td>${item.item_color} ${item.item_model}</td>
+                    <td>$${parseFloat(item.price).toFixed(2)}</td>
+                    <td>${item.install_item_quantity}</td>
+                    <td>$${parseFloat(item.total_price).toFixed(2)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+              <tfoot>
+                <tr class="items-total">
+                  <td colspan="4"><strong>Items Total:</strong></td>
+                  <td><strong>$${install.items.reduce((sum, item) => sum + parseFloat(item.total_price), 0).toFixed(2)}</strong></td>
+                </tr>
+              </tfoot>
+            </table>
+          ` : '<div class="no-items">No items found for this install</div>'}
+        </div>
+      `).join('')}
+      
+      <script>
+        window.onload = function() { 
+          window.print(); 
+          setTimeout(() => window.close(), 1000);
+        }
+      </script>
+    </body>
+    </html>
+  `;
+  
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(printContent);
+  printWindow.document.close();
 }
 
 function printInstallList(installs) {
@@ -211,7 +353,7 @@ async function expandRow(installId) {
       </div>
     ` : '<div style="padding: 15px; text-align: center; color: #666;">No items found for this install</div>';
     
-    itemsRow.innerHTML = `<td colspan="12" style="padding: 0; background-color: #f8f9fa; border: none;">${itemsHtml}</td>`;
+    itemsRow.innerHTML = `<td colspan="13" style="padding: 0; background-color: #f8f9fa; border: none;">${itemsHtml}</td>`;
     installRow.insertAdjacentElement('afterend', itemsRow);
     
   } catch (error) {
@@ -253,6 +395,11 @@ function renderInstalls() {
       <td>$${install.install_items_total ? parseFloat(install.install_items_total).toFixed(2) : '0.00'}</td>
       <td>$${install.subtotal ? parseFloat(install.subtotal).toFixed(2) : '0.00'}</td>
       <td>${install.notes || 'N/A'}</td>
+      <td>
+        <button class="expand-btn" onclick="expandRow(${install.install_id})" title="View install items">
+          Expand
+        </button>
+      </td>
       <td>
         <button onclick="editInstall(${install.install_id})" class="summary-table button">Edit</button>
       </td>
