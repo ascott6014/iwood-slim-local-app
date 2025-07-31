@@ -18,22 +18,31 @@
 
     <!-- Search Section -->
     <div class="section">
-      <h2>Search & Filter</h2>
-      <div class="form-row">
-        <div class="form-group">
-          <label for="searchInput">Search Customers</label>
-          <input type="text" id="searchInput" placeholder="Search by name, phone, or email...">
+      <div class="customer-search">
+        <label for="customer-search">Search Customers:</label>
+        <input type="text" id="searchInput" placeholder="Search by name, phone, or email...">
+        <input type="hidden" id="customer_id" />
+      </div>
+      
+      <div class="filter-row" style="margin-top: 15px;">
+        <div class="button-group">
+          <h4>Visit Type:</h4>
+          <button type="button" class="filter-btn active" data-visit-type="all">All Types</button>
+          <button type="button" class="filter-btn" data-visit-type="Order">Order</button>
+          <button type="button" class="filter-btn" data-visit-type="Repair">Repair</button>
+          <button type="button" class="filter-btn" data-visit-type="Install">Install</button>
+          <button type="button" class="filter-btn" data-visit-type="New Customer">New Customer</button>
         </div>
-        <div class="form-group">
-          <label for="visitFilter">Filter by Visit Status</label>
-          <select id="visitFilter">
-            <option value="">All Customers</option>
-            <option value="has-visits">Customers with Visits</option>
-            <option value="no-visits">Customers without Visits</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <button type="button" id="clearFilters" class="summary-table button">Clear Filters</button>
+      </div>
+      
+      <div class="filter-row">
+        <div class="button-group">
+          <h4>Sort By:</h4>
+          <button type="button" class="filter-btn active" data-sort="none">No Sorting</button>
+          <button type="button" class="filter-btn" data-sort="name-asc">Name (A-Z)</button>
+          <button type="button" class="filter-btn" data-sort="name-desc">Name (Z-A)</button>
+          <button type="button" class="filter-btn" data-sort="date-newest">Newest Visit</button>
+          <button type="button" class="filter-btn" data-sort="date-oldest">Oldest Visit</button>
         </div>
       </div>
     </div>
@@ -47,23 +56,24 @@
     <div class="section">
       <h2>Customer List</h2>
       <div id="customerTableContainer">
-        <table id="customerTable" class="summary-table" style="display: none;">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Phone</th>
-              <th>Email</th>
-              <th>Address</th>
-              <th>Last Visit</th>
-              <th>Visit Type</th>
-              <th>Visit Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="customerTableBody">
-            <!-- Table rows will be populated here -->
-          </tbody>
-        </table>
+        <div class="table-wrapper">
+          <table id="customerTable" class="summary-table" style="display: none;">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Address</th>
+                <th>Last Visit</th>
+                <th>Visit Type</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="customerTableBody">
+              <!-- Table rows will be populated here -->
+            </tbody>
+          </table>
+        </div>
         
         <div id="noCustomersMessage" style="text-align: center; display: none;">
           <p>No customers found.</p>
@@ -72,24 +82,6 @@
       </div>
     </div>
 
-    <!-- Customer Stats Section -->
-    <div class="section">
-      <h2>Customer Statistics</h2>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Total Customers</label>
-          <div id="totalCustomers" style="font-size: 24px; font-weight: bold; color: #28a745;">-</div>
-        </div>
-        <div class="form-group">
-          <label>Customers with Recent Visits</label>
-          <div id="customersWithVisits" style="font-size: 24px; font-weight: bold; color: #17a2b8;">-</div>
-        </div>
-        <div class="form-group">
-          <label>New Customers (This Month)</label>
-          <div id="newCustomersThisMonth" style="font-size: 24px; font-weight: bold; color: #ffc107;">-</div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <script>
@@ -100,9 +92,29 @@
       loadCustomers();
       
       // Set up event listeners
-      document.getElementById('searchInput').addEventListener('input', filterCustomers);
-      document.getElementById('visitFilter').addEventListener('change', filterCustomers);
-      document.getElementById('clearFilters').addEventListener('click', clearFilters);
+      document.getElementById('searchInput').addEventListener('input', filterAndSortCustomers);
+      
+      // Set up visit type filter button event listeners
+      document.querySelectorAll('.filter-btn[data-visit-type]').forEach(btn => {
+        btn.addEventListener('click', function() {
+          // Remove active class from all visit type buttons
+          document.querySelectorAll('.filter-btn[data-visit-type]').forEach(b => b.classList.remove('active'));
+          // Add active class to clicked button
+          this.classList.add('active');
+          filterAndSortCustomers();
+        });
+      });
+      
+      // Set up sort button event listeners
+      document.querySelectorAll('.filter-btn[data-sort]').forEach(btn => {
+        btn.addEventListener('click', function() {
+          // Remove active class from all sort buttons
+          document.querySelectorAll('.filter-btn[data-sort]').forEach(b => b.classList.remove('active'));
+          // Add active class to clicked button
+          this.classList.add('active');
+          filterAndSortCustomers();
+        });
+      });
     });
 
     async function loadCustomers() {
@@ -130,7 +142,6 @@
         } else {
           customerTable.style.display = 'table';
           displayCustomers(filteredCustomers);
-          updateStatistics();
         }
       } catch (error) {
         console.error('Error loading customers:', error);
@@ -153,7 +164,6 @@
         // Format last visit
         const lastVisit = formatLastVisit(customer.last_visit_date);
         const visitType = customer.last_visit_type || '-';
-        const visitStatus = customer.last_visit_status || '-';
         
         row.innerHTML = `
           <td><strong>${customer.first_name} ${customer.last_name}</strong></td>
@@ -162,10 +172,12 @@
           <td>${address}</td>
           <td>${lastVisit}</td>
           <td>${visitType}</td>
-          <td><span class="status-badge ${getStatusClass(visitStatus)}">${visitStatus}</span></td>
           <td>
-            <button onclick="viewCustomerDetails(${customer.customer_id})" class="summary-table button" style="padding: 5px 10px; font-size: 12px;">
-              View Details
+            <button onclick="modifyCustomer(${customer.customer_id})" class="modify-customer-btn" style="padding: 5px 10px; font-size: 11px; margin-right: 5px; min-width: 60px;">
+              Modify
+            </button>
+            <button onclick="deleteCustomer(${customer.customer_id})" class="remove-item-btn" style="padding: 5px 10px; font-size: 11px; min-width: 60px;">
+              Delete
             </button>
           </td>
         `;
@@ -190,32 +202,15 @@
       if (!visitDate) return 'No visits';
       
       const date = new Date(visitDate);
-      const now = new Date();
-      const diffTime = Math.abs(now - date);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      if (diffDays === 1) return 'Yesterday';
-      if (diffDays < 7) return `${diffDays} days ago`;
-      if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
-      if (diffDays < 365) return `${Math.ceil(diffDays / 30)} months ago`;
-      
       return date.toLocaleDateString();
     }
 
-    function getStatusClass(status) {
-      switch (status?.toLowerCase()) {
-        case 'completed': return 'status-completed';
-        case 'in progress': return 'status-in-progress';
-        case 'pending': return 'status-pending';
-        case 'cancelled': return 'status-cancelled';
-        default: return 'status-unknown';
-      }
-    }
-
-    function filterCustomers() {
+    function filterAndSortCustomers() {
       const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-      const visitFilter = document.getElementById('visitFilter').value;
+      const activeVisitType = document.querySelector('.filter-btn[data-visit-type].active').getAttribute('data-visit-type');
+      const activeSortOption = document.querySelector('.filter-btn[data-sort].active').getAttribute('data-sort');
       
+      // First, filter by search term and visit type
       filteredCustomers = allCustomers.filter(customer => {
         // Search filter
         const matchesSearch = !searchTerm || 
@@ -224,86 +219,141 @@
           customer.phone.includes(searchTerm) ||
           (customer.email && customer.email.toLowerCase().includes(searchTerm));
         
-        // Visit filter
-        let matchesVisitFilter = true;
-        if (visitFilter === 'has-visits') {
-          matchesVisitFilter = customer.last_visit_date !== null;
-        } else if (visitFilter === 'no-visits') {
-          matchesVisitFilter = customer.last_visit_date === null;
+        // Visit type filter
+        let matchesVisitType = true;
+        if (activeVisitType !== 'all') {
+          matchesVisitType = customer.last_visit_type === activeVisitType;
         }
         
-        return matchesSearch && matchesVisitFilter;
+        return matchesSearch && matchesVisitType;
       });
       
-      displayCustomers(filteredCustomers);
-      updateStatistics();
-    }
-
-    function clearFilters() {
-      document.getElementById('searchInput').value = '';
-      document.getElementById('visitFilter').value = '';
-      filteredCustomers = [...allCustomers];
-      displayCustomers(filteredCustomers);
-      updateStatistics();
-    }
-
-    function updateStatistics() {
-      const totalCustomers = allCustomers.length;
-      const customersWithVisits = allCustomers.filter(c => c.last_visit_date).length;
+      // Then, sort the filtered results
+      if (activeSortOption !== 'none') {
+        filteredCustomers.sort((a, b) => {
+          switch (activeSortOption) {
+            case 'name-asc':
+              return `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`);
+            case 'name-desc':
+              return `${b.first_name} ${b.last_name}`.localeCompare(`${a.first_name} ${a.last_name}`);
+            case 'date-newest':
+              const dateA = a.last_visit_date ? new Date(a.last_visit_date) : new Date(0);
+              const dateB = b.last_visit_date ? new Date(b.last_visit_date) : new Date(0);
+              return dateB - dateA; // Newest first
+            case 'date-oldest':
+              const dateA2 = a.last_visit_date ? new Date(a.last_visit_date) : new Date(0);
+              const dateB2 = b.last_visit_date ? new Date(b.last_visit_date) : new Date(0);
+              return dateA2 - dateB2; // Oldest first
+            default:
+              return 0;
+          }
+        });
+      }
       
-      // Calculate new customers this month
-      const thisMonth = new Date();
-      thisMonth.setDate(1);
-      const newCustomersThisMonth = allCustomers.filter(c => {
-        const createdDate = new Date(c.customer_created_at);
-        return createdDate >= thisMonth;
-      }).length;
-      
-      document.getElementById('totalCustomers').textContent = totalCustomers;
-      document.getElementById('customersWithVisits').textContent = customersWithVisits;
-      document.getElementById('newCustomersThisMonth').textContent = newCustomersThisMonth;
+      displayCustomers(filteredCustomers);
     }
 
-    function viewCustomerDetails(customerId) {
-      // This could navigate to a customer detail page or open a modal
-      alert(`Customer details for ID: ${customerId}\n\nThis could open a detailed customer view with visit history, orders, repairs, etc.`);
+    function modifyCustomer(customerId) {
+      // Find the customer data
+      const customer = allCustomers.find(c => c.customer_id === customerId);
+      if (!customer) {
+        alert('Customer not found');
+        return;
+      }
+
+      // Create a simple form for editing customer information
+      const newFirstName = prompt('First Name:', customer.first_name);
+      if (newFirstName === null) return; // User cancelled
+
+      const newLastName = prompt('Last Name:', customer.last_name);
+      if (newLastName === null) return;
+
+      const newPhone = prompt('Phone:', customer.phone);
+      if (newPhone === null) return;
+
+      const newEmail = prompt('Email:', customer.email || '');
+      if (newEmail === null) return;
+
+      const newAddress = prompt('Address:', customer.address || '');
+      if (newAddress === null) return;
+
+      const newCity = prompt('City:', customer.city || '');
+      if (newCity === null) return;
+
+      const newState = prompt('State:', customer.state || '');
+      if (newState === null) return;
+
+      const newZip = prompt('ZIP:', customer.zip || '');
+      if (newZip === null) return;
+
+      // Prepare update data
+      const updateData = {
+        first_name: newFirstName.trim(),
+        last_name: newLastName.trim(),
+        phone: newPhone.trim(),
+        email: newEmail.trim() || null,
+        address: newAddress.trim() || null,
+        city: newCity.trim() || null,
+        state: newState.trim() || null,
+        zip: newZip.trim() || null
+      };
+
+      // Send update request to server
+      fetch(`/api/customers/${customerId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updateData)
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.message && data.message.includes('updated')) {
+          alert('Customer updated successfully!');
+          // Reload the customer list
+          loadCustomers();
+        } else {
+          alert('Error updating customer: ' + (data.error || data.message || 'Unknown error'));
+        }
+      })
+      .catch(error => {
+        console.error('Error updating customer:', error);
+        alert('Error updating customer. Please try again.');
+      });
+    }
+
+    function deleteCustomer(customerId) {
+      const customer = allCustomers.find(c => c.customer_id === customerId);
+      if (!customer) {
+        alert('Customer not found');
+        return;
+      }
+
+      const confirmDelete = confirm(`Are you sure you want to delete customer ${customer.first_name} ${customer.last_name}?\n\nThis action cannot be undone.`);
+      if (confirmDelete) {
+        // Send delete request to server
+        fetch(`/api/customers/${customerId}`, {
+          method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.message && data.message.includes('deleted')) {
+            alert('Customer deleted successfully!');
+            // Reload the customer list
+            loadCustomers();
+          } else {
+            alert('Error deleting customer: ' + (data.error || data.message || 'Unknown error'));
+          }
+        })
+        .catch(error => {
+          console.error('Error deleting customer:', error);
+          alert('Error deleting customer. Please try again.');
+        });
+      }
     }
   </script>
 
   <style>
-    .status-badge {
-      padding: 3px 8px;
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: bold;
-      text-transform: uppercase;
-    }
-    
-    .status-completed {
-      background-color: #d4edda;
-      color: #155724;
-    }
-    
-    .status-in-progress {
-      background-color: #d1ecf1;
-      color: #0c5460;
-    }
-    
-    .status-pending {
-      background-color: #fff3cd;
-      color: #856404;
-    }
-    
-    .status-cancelled {
-      background-color: #f8d7da;
-      color: #721c24;
-    }
-    
-    .status-unknown {
-      background-color: #e2e3e5;
-      color: #495057;
-    }
-    
     #customerTable {
       width: 100%;
       margin-top: 20px;
@@ -316,15 +366,21 @@
       border-bottom: 1px solid #dee2e6;
     }
     
-    #customerTable th {
-      background-color: #f8f9fa;
-      font-weight: bold;
-      position: sticky;
-      top: 0;
-    }
-    
     #customerTable tbody tr:hover {
       background-color: #f8f9fa;
+    }
+
+    .modify-customer-btn {
+      background-color: #ff8c00 !important;
+      color: white !important;
+      border: none !important;
+      border-radius: 4px !important;
+      cursor: pointer !important;
+      font-weight: 500 !important;
+    }
+
+    .modify-customer-btn:hover {
+      background-color: #e67e00 !important;
     }
   </style>
 </body>

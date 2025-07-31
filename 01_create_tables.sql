@@ -24,7 +24,7 @@ CREATE TABLE customer_visits (
     customer_id INT NOT NULL,
     visit_type ENUM('Order', 'Repair', 'Install', 'New Customer') NOT NULL,
     visit_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT customer_visits_fk_customers FOREIGN KEY (customer_id) REFERENCES customers (customer_id)
+    CONSTRAINT customer_visits_fk_customers FOREIGN KEY (customer_id) REFERENCES customers (customer_id) ON DELETE CASCADE
 );
 
 CREATE TABLE items (
@@ -51,7 +51,7 @@ CREATE TABLE item_price_log (
     start_date DATE NOT NULL,
     end_date DATE,
     is_active BOOLEAN,
-    CONSTRAINT item_price_log_fk_items FOREIGN KEY (item_id) REFERENCES items(item_id)
+    CONSTRAINT item_price_log_fk_items FOREIGN KEY (item_id) REFERENCES items(item_id) ON DELETE CASCADE
 );
 
 CREATE TABLE installs (
@@ -62,7 +62,7 @@ CREATE TABLE installs (
     install_date DATE,
     notes TEXT,
     subtotal DECIMAL(10,2) DEFAULT 0.00,
-    CONSTRAINT installs_fk_customers FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+    CONSTRAINT installs_fk_customers FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON DELETE CASCADE
 );
 
 CREATE TABLE repairs (
@@ -77,7 +77,7 @@ CREATE TABLE repairs (
     notes TEXT,
     drop_off_date DATETIME NOT NULL,
     pickup_date DATETIME,
-    CONSTRAINT repairs_fk_customers FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
+    CONSTRAINT repairs_fk_customers FOREIGN KEY (customer_id) REFERENCES customers(customer_id) ON DELETE CASCADE
 );
 
 CREATE TABLE orders (
@@ -85,7 +85,7 @@ CREATE TABLE orders (
     customer_id INT NOT NULL,
     order_date DATE NOT NULL,
     subtotal DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    CONSTRAINT orders_fk_customers FOREIGN KEY (customer_id) REFERENCES customers (customer_id)
+    CONSTRAINT orders_fk_customers FOREIGN KEY (customer_id) REFERENCES customers (customer_id) ON DELETE CASCADE
 );
 
 CREATE TABLE install_items (
@@ -94,8 +94,8 @@ CREATE TABLE install_items (
     item_id INT NOT NULL,
     install_item_quantity INT NOT NULL,
     total_price DECIMAL(10,2),
-    CONSTRAINT install_items_fk_installs FOREIGN KEY (install_id) REFERENCES installs (install_id),
-    CONSTRAINT install_items_fk_items FOREIGN KEY (item_id) REFERENCES items (item_id)
+    CONSTRAINT install_items_fk_installs FOREIGN KEY (install_id) REFERENCES installs (install_id) ON DELETE CASCADE,
+    CONSTRAINT install_items_fk_items FOREIGN KEY (item_id) REFERENCES items (item_id) ON DELETE CASCADE
 );
 
 CREATE TABLE repair_items (
@@ -104,8 +104,8 @@ CREATE TABLE repair_items (
     item_id INT NOT NULL,
     repair_item_quantity INT NOT NULL,
     total_price DECIMAL(10,2) NOT NULL,
-    CONSTRAINT repair_items_fk_repairs FOREIGN KEY (repair_id) REFERENCES repairs (repair_id),
-    CONSTRAINT repair_items_fk_items FOREIGN KEY (item_id) REFERENCES items (item_id)
+    CONSTRAINT repair_items_fk_repairs FOREIGN KEY (repair_id) REFERENCES repairs (repair_id) ON DELETE CASCADE,
+    CONSTRAINT repair_items_fk_items FOREIGN KEY (item_id) REFERENCES items (item_id) ON DELETE CASCADE
 );
 
 CREATE TABLE order_items (
@@ -114,6 +114,6 @@ CREATE TABLE order_items (
     item_id INT NOT NULL,
     order_item_quantity INT NOT NULL,
     total_price DECIMAL(10,2),
-    CONSTRAINT order_items_fk_orders FOREIGN KEY (order_id) REFERENCES orders(order_id),
-    CONSTRAINT order_items_fk_items FOREIGN KEY (item_id) REFERENCES items(item_id)
+    CONSTRAINT order_items_fk_orders FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
+    CONSTRAINT order_items_fk_items FOREIGN KEY (item_id) REFERENCES items(item_id) ON DELETE CASCADE
 );

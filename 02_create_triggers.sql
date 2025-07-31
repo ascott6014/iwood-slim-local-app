@@ -9,6 +9,16 @@ USE iwoodslim;
 -- ========================================
 
 DELIMITER $$  
+CREATE TRIGGER trg_new_customer_visit
+AFTER INSERT ON customers
+FOR EACH ROW
+BEGIN
+    INSERT INTO customer_visits (customer_id, visit_type, visit_date)
+    VALUES (NEW.customer_id, 'New Customer', NOW());
+END$$  
+DELIMITER ;
+
+DELIMITER $$  
 CREATE TRIGGER trg_order_visit
 AFTER INSERT ON orders
 FOR EACH ROW

@@ -60,10 +60,13 @@ export async function handleGetCustomersWithRecentVisits(
   res: Response
 ): Promise<void> {
   try {
+    console.log('Attempting to fetch customers with recent visits...');
     const customers = await getCustomersWithRecentVisits();
+    console.log('Successfully fetched customers:', customers.length);
     res.status(200).json(customers);
   } catch (err) {
     console.error('Error fetching customers with recent visits:', err);
+    console.error('Error details:', JSON.stringify(err, null, 2));
     const databaseErrorMessage = parseDatabaseError(err);
     res.status(500).json({ message: 'Error fetching customers with recent visits', error: databaseErrorMessage });
   }

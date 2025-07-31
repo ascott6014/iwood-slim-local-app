@@ -13,13 +13,10 @@ export async function getCustomersWithRecentVisits(): Promise<any[]> {
        city,
        state,
        zip,
-       customer_created_at,
        last_visit_date,
-       last_visit_type,
-       last_visit_description,
-       last_visit_status
+       last_visit_type
      FROM customer_with_recent_visit
-     ORDER BY last_visit_date DESC NULLS LAST, customer_created_at DESC`
+     ORDER BY last_visit_date IS NULL, last_visit_date DESC, customer_id DESC`
   );
   return rows as any[];
 }

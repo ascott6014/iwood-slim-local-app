@@ -522,6 +522,11 @@ button:hover {
   color: white;
 }
 
+.status-unknown {
+  background-color: #6c757d;
+  color: white;
+}
+
 .summary-table {
   width: 100%;
   border-collapse: collapse;

@@ -1,10 +1,9 @@
 import './config'; // Load environment variables
-import { getCustomers} from './models/customerModel' 
 import express, {Express} from 'express';
 import { handleCustomerAndRepair, handleRepairForCustomer, handleRepairPickup, handleRepairStatusUpdate, handleAddRepairItem, handleGetRepairItems } from './controllers/repairController';
 import { handleCreateCustomerOrder, handleCreateOrderForCustomer, handleCreateCompleteOrder } from './controllers/orderController';
 import { handleCreateCustomerInstall, handleCreateInstallForCustomer, handleGetInstallItemsById, handleAddInstallItem, handleUpdateInstallItem, handleRemoveInstallItem } from './controllers/installController';
-import { handleGetCustomers, handleAddCustomer, handleSearchCustomers, handleGetCustomersWithRecentVisits} from './controllers/customerController';
+import { handleGetCustomers, handleAddCustomer, handleSearchCustomers, handleGetCustomersWithRecentVisits, handleUpdateCustomer, handleDeleteCustomer} from './controllers/customerController';
 import { handleGetInstallSummaries, handleGetOrderSummaries, handleGetRepairSummaries } from './controllers/summaryController';
 import { handleSearchItems, handleGetOrderItems, handleAddOrderItem, handleUpdateOrderItem, handleRemoveOrderItem, handleGetInstallItems } from './controllers/itemController';
 
@@ -45,6 +44,8 @@ app.get('/items/install', handleGetInstallItems);
 app.get('/api/customers', handleGetCustomers);
 app.get('/api/customers/search', handleSearchCustomers);
 app.get('/api/customers/with-visits', handleGetCustomersWithRecentVisits);
+app.put('/api/customers/:id', handleUpdateCustomer);
+app.delete('/api/customers/:id', handleDeleteCustomer);
 
 app.get('/api/items/search', handleSearchItems);
 app.get('/api/orders/:orderId/items', handleGetOrderItems);
@@ -70,13 +71,8 @@ app.get('/tax/current', async (req, res) => {
   }
 });
 
-
-
-const customers = await getCustomers();
 app.listen(PORT, () => {
     console.log(`Server listening on  http://localhost:${PORT}`);
-    
-    console.log(customers);
 });
 
 
