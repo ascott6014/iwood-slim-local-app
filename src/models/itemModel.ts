@@ -49,3 +49,87 @@ export async function getInstallItems(): Promise<Item[]> {
   );
   return rows as Item[];
 }
+
+export async function getAllItems(): Promise<Item[]> {
+  const [rows] = await db.query(
+    `SELECT item_id, item_name, item_color, item_model, description, cost, markup_rate, price, quantity, sell_item, repair_item, install_item
+     FROM items
+     ORDER BY item_name`,
+    []
+  );
+  return rows as Item[];
+}
+
+export async function createItem(itemData: {
+  item_name: string;
+  item_color: string;
+  item_model: string;
+  description: string;
+  cost: number;
+  markup_rate: number;
+  quantity: number;
+  sell_item: boolean;
+  repair_item: boolean;
+  install_item: boolean;
+}): Promise<any> {
+  const [result] = await db.query(
+    `INSERT INTO items (item_name, item_color, item_model, description, cost, markup_rate, quantity, sell_item, repair_item, install_item)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      itemData.item_name,
+      itemData.item_color,
+      itemData.item_model,
+      itemData.description,
+      itemData.cost,
+      itemData.markup_rate,
+      itemData.quantity,
+      itemData.sell_item,
+      itemData.repair_item,
+      itemData.install_item
+    ]
+  );
+  return result;
+}
+
+export async function updateItem(itemId: number, itemData: {
+  item_name: string;
+  item_color: string;
+  item_model: string;
+  description: string;
+  cost: number;
+  markup_rate: number;
+  quantity: number;
+  sell_item: boolean;
+  repair_item: boolean;
+  install_item: boolean;
+}): Promise<any> {
+  const [result] = await db.query(
+    `UPDATE items SET 
+     item_name = ?, item_color = ?, item_model = ?, description = ?, 
+     cost = ?, markup_rate = ?, quantity = ?, 
+     sell_item = ?, repair_item = ?, install_item = ?
+     WHERE item_id = ?`,
+    [
+      itemData.item_name,
+      itemData.item_color,
+      itemData.item_model,
+      itemData.description,
+      itemData.cost,
+      itemData.markup_rate,
+      itemData.quantity,
+      itemData.sell_item,
+      itemData.repair_item,
+      itemData.install_item,
+      itemId
+    ]
+  );
+  return result;
+}
+
+export async function deleteItem(itemId: number): Promise<any> {
+  const [result] = await db.query(
+    `DELETE FROM items WHERE item_id = ?`,
+    [itemId]
+  );
+  return result;
+}

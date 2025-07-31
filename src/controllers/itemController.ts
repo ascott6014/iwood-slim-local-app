@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { searchItems, getOrderItems, getInstallItems } from '../models/itemModel';
+import { searchItems, getOrderItems, getInstallItems, getAllItems, createItem, updateItem, deleteItem, getItemById } from '../models/itemModel';
 import { addOrderItem, removeOrderItem, updateOrderItem } from '../models/orderModel';
 
 export async function handleSearchItems(req: Request, res: Response): Promise<void> {
@@ -93,5 +93,137 @@ export async function handleGetInstallItems(req: Request, res: Response): Promis
   } catch (error) {
     console.error('Error fetching install items:', error);
     res.status(500).json({ message: 'Unable to fetch install items', error });
+  }
+}
+
+export async function handleGetAllItems(req: Request, res: Response): Promise<void> {
+  try {
+    const items = await getAllItems();
+    res.status(200).json(items);
+  } catch (error) {
+    console.error('Error fetching all items:', error);
+    res.status(500).json({ message: 'Unable to fetch items', error });
+  }
+}
+
+export async function handleGetItemById(req: Request, res: Response): Promise<void> {
+  const itemId = parseInt(req.params.itemId);
+  if (isNaN(itemId)) {
+    res.status(400).json({ message: 'Invalid item ID' });
+    return;
+  }
+
+  try {
+    const item = await getItemById(itemId);
+    if (!item) {
+      res.status(404).json({ message: 'Item not found' });
+      return;
+    }
+    res.status(200).json(item);
+  } catch (error) {
+    console.error('Error fetching item:', error);
+    res.status(500).json({ message: 'Unable to fetch item', error });
+  }
+}
+
+export async function handleCreateItem(req: Request, res: Response): Promise<void> {
+  const {
+    item_name,
+    item_color,
+    item_model,
+    description,
+    cost,
+    markup_rate,
+    quantity,
+    sell_item,
+    repair_item,
+    install_item
+  } = req.body;
+
+  if (!item_name || !item_color || !item_model || !description || 
+      cost === undefined || markup_rate === undefined || quantity === undefined) {
+    res.status(400).json({ message: 'All fields are required' });
+    return;
+  }
+
+  try {
+    const result = await createItem({
+      item_name,
+      item_color,
+      item_model,
+      description,
+      cost: parseFloat(cost),
+      markup_rate: parseFloat(markup_rate),
+      quantity: parseInt(quantity),
+      sell_item: Boolean(sell_item),
+      repair_item: Boolean(repair_item),
+      install_item: Boolean(install_item)
+    });
+    res.status(201).json({ message: 'Item created successfully', itemId: result.insertId });
+  } catch (error) {
+    console.error('Error creating item:', error);
+    res.status(500).json({ message: 'Unable to create item', error });
+  }
+}
+
+export async function handleUpdateItem(req: Request, res: Response): Promise<void> {
+  const itemId = parseInt(req.params.itemId);
+  if (isNaN(itemId)) {
+    res.status(400).json({ message: 'Invalid item ID' });
+    return;
+  }
+
+  const {
+    item_name,
+    item_color,
+    item_model,
+    description,
+    cost,
+    markup_rate,
+    quantity,
+    sell_item,
+    repair_item,
+    install_item
+  } = req.body;
+
+  if (!item_name || !item_color || !item_model || !description || 
+      cost === undefined || markup_rate === undefined || quantity === undefined) {
+    res.status(400).json({ message: 'All fields are required' });
+    return;
+  }
+
+  try {
+    await updateItem(itemId, {
+      item_name,
+      item_color,
+      item_model,
+      description,
+      cost: parseFloat(cost),
+      markup_rate: parseFloat(markup_rate),
+      quantity: parseInt(quantity),
+      sell_item: Boolean(sell_item),
+      repair_item: Boolean(repair_item),
+      install_item: Boolean(install_item)
+    });
+    res.status(200).json({ message: 'Item updated successfully' });
+  } catch (error) {
+    console.error('Error updating item:', error);
+    res.status(500).json({ message: 'Unable to update item', error });
+  }
+}
+
+export async function handleDeleteItem(req: Request, res: Response): Promise<void> {
+  const itemId = parseInt(req.params.itemId);
+  if (isNaN(itemId)) {
+    res.status(400).json({ message: 'Invalid item ID' });
+    return;
+  }
+
+  try {
+    await deleteItem(itemId);
+    res.status(200).json({ message: 'Item deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting item:', error);
+    res.status(500).json({ message: 'Unable to delete item', error });
   }
 }

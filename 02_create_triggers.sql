@@ -53,11 +53,31 @@ DELIMITER ;
 -- ========================================
 
 DELIMITER $$
+CREATE TRIGGER trg_item_calculate_price
+BEFORE INSERT ON items
+FOR EACH ROW
+BEGIN
+    -- Calculate price based on cost and markup rate
+    SET NEW.price = ROUND(NEW.cost * (1 + NEW.markup_rate / 100), 2);
+END$$
+DELIMITER ;
+
+DELIMITER $$
 CREATE TRIGGER trg_item_insert
 AFTER INSERT ON items
 FOR EACH ROW
 INSERT INTO item_price_log (item_id, cost, markup_rate, price, start_date, is_active)
 VALUES (NEW.item_id, NEW.cost, NEW.markup_rate, NEW.price, CURDATE(), TRUE);
+DELIMITER ;
+
+DELIMITER $$
+CREATE TRIGGER trg_item_calculate_price_update
+BEFORE UPDATE ON items
+FOR EACH ROW
+BEGIN
+    -- Calculate price based on cost and markup rate
+    SET NEW.price = ROUND(NEW.cost * (1 + NEW.markup_rate / 100), 2);
+END$$
 DELIMITER ;
 
 DELIMITER $$

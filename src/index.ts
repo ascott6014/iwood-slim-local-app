@@ -5,7 +5,7 @@ import { handleCreateCustomerOrder, handleCreateOrderForCustomer, handleCreateCo
 import { handleCreateCustomerInstall, handleCreateInstallForCustomer, handleGetInstallItemsById, handleAddInstallItem, handleUpdateInstallItem, handleRemoveInstallItem } from './controllers/installController';
 import { handleGetCustomers, handleAddCustomer, handleSearchCustomers, handleGetCustomersWithRecentVisits, handleUpdateCustomer, handleDeleteCustomer} from './controllers/customerController';
 import { handleGetInstallSummaries, handleGetOrderSummaries, handleGetRepairSummaries } from './controllers/summaryController';
-import { handleSearchItems, handleGetOrderItems, handleAddOrderItem, handleUpdateOrderItem, handleRemoveOrderItem, handleGetInstallItems } from './controllers/itemController';
+import { handleSearchItems, handleGetOrderItems, handleAddOrderItem, handleUpdateOrderItem, handleRemoveOrderItem, handleGetInstallItems, handleGetAllItems, handleGetItemById, handleCreateItem, handleUpdateItem, handleDeleteItem } from './controllers/itemController';
 
 
 
@@ -48,6 +48,11 @@ app.put('/api/customers/:id', handleUpdateCustomer);
 app.delete('/api/customers/:id', handleDeleteCustomer);
 
 app.get('/api/items/search', handleSearchItems);
+app.get('/api/items', handleGetAllItems);
+app.get('/api/items/:itemId', handleGetItemById);
+app.post('/api/items', handleCreateItem);
+app.put('/api/items/:itemId', handleUpdateItem);
+app.delete('/api/items/:itemId', handleDeleteItem);
 app.get('/api/orders/:orderId/items', handleGetOrderItems);
 app.post('/api/order-items', handleAddOrderItem);
 app.put('/api/order-items/:orderItemId', handleUpdateOrderItem);

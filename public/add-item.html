@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Item - iWood Slim</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Add New Item</h1>
+            <button onclick="location.href='index.html'" class="home-btn">Back to Home</button>
+        </div>
+
+        <div class="form-container">
+            <form id="itemForm" class="item-form">
+                <div class="form-group">
+                    <label for="item_name">Item Name*:</label>
+                    <input type="text" id="item_name" name="item_name" required>
+                </div>
+
+                <div class="form-row">
+                <div class="form-group">
+                    <label for="item_color">Color*:</label>
+                    <input type="text" id="item_color" name="item_color" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="item_model">Model*:</label>
+                    <input type="text" id="item_model" name="item_model" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description*:</label>
+                <textarea id="description" name="description" rows="3" required></textarea>
+            </div>                <div class="form-row">
+                    <div class="form-group">
+                        <label for="cost">Cost*:</label>
+                        <input type="number" id="cost" name="cost" step="0.01" min="0" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="markup_rate">Markup Rate*:</label>
+                        <input type="number" id="markup_rate" name="markup_rate" step="0.01" min="0" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="price">Price (Auto-calculated)*:</label>
+                        <input type="number" id="price" name="price" step="0.01" min="0" readonly style="background-color: #f8f9fa; cursor: not-allowed;">
+                        <small style="color: #666; font-size: 12px;">Price is automatically calculated based on cost and markup rate</small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="quantity">Quantity*:</label>
+                    <input type="number" id="quantity" name="quantity" min="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Item Usage:</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="sell_item" name="sell_item" checked>
+                            <span class="checkmark"></span>
+                            Available for Sale
+                        </label>
+                        
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="repair_item" name="repair_item">
+                            <span class="checkmark"></span>
+                            Available for Repairs
+                        </label>
+                        
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="install_item" name="install_item">
+                            <span class="checkmark"></span>
+                            Available for Installs
+                        </label>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="submit-btn">Add Item</button>
+                    <button type="button" onclick="resetForm()" class="reset-btn">Reset Form</button>
+                    <button type="button" onclick="location.href='view-items.html'" class="view-items-btn">View All Items</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="message" class="message" style="display: none;"></div>
+    </div>
+
+    <script>
+        // Auto-calculate price based on cost and markup (for display only)
+        document.getElementById('cost').addEventListener('input', calculatePrice);
+        document.getElementById('markup_rate').addEventListener('input', calculatePrice);
+
+        function calculatePrice() {
+            const cost = parseFloat(document.getElementById('cost').value) || 0;
+            const markupRate = parseFloat(document.getElementById('markup_rate').value) || 0;
+            const price = cost * (1 + markupRate / 100);
+            
+            if (cost > 0 && markupRate >= 0) {
+                document.getElementById('price').value = price.toFixed(2);
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('itemForm').reset();
+            document.getElementById('sell_item').checked = true;
+            document.getElementById('price').value = ''; // Clear calculated price
+            hideMessage();
+        }
+
+        function showMessage(text, isError = false) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = isError ? 'message error-message' : 'message success-message';
+            messageDiv.style.display = 'block';
+            
+            if (!isError) {
+                setTimeout(() => {
+                    hideMessage();
+                }, 3000);
+            }
+        }
+
+        function hideMessage() {
+            document.getElementById('message').style.display = 'none';
+        }
+
+        document.getElementById('itemForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const itemData = {
+                item_name: formData.get('item_name'),
+                item_color: formData.get('item_color'),
+                item_model: formData.get('item_model'),
+                description: formData.get('description'),
+                cost: parseFloat(formData.get('cost')),
+                markup_rate: parseFloat(formData.get('markup_rate')),
+                quantity: parseInt(formData.get('quantity')),
+                sell_item: formData.get('sell_item') === 'on',
+                repair_item: formData.get('repair_item') === 'on',
+                install_item: formData.get('install_item') === 'on'
+            };
+
+            try {
+                const response = await fetch('/api/items', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(itemData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage('Item added successfully!', false);
+                    resetForm();
+                } else {
+                    showMessage(result.message || 'Error adding item', true);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('Error adding item. Please try again.', true);
+            }
+        });
+    </script>
+</body>
+</html>
