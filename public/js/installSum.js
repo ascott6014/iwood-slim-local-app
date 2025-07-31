@@ -6,6 +6,220 @@ function debounce(fn, delay = 300) {
   };
 }
 
+// Global variables
+let allInstalls = [];
+let filteredInstalls = [];
+
+// Select/Print functionality
+function selectAll() {
+  const checkboxes = document.querySelectorAll('input[type="checkbox"].install-select');
+  checkboxes.forEach(cb => cb.checked = true);
+  updatePrintButton();
+}
+
+function selectNone() {
+  const checkboxes = document.querySelectorAll('input[type="checkbox"].install-select');
+  checkboxes.forEach(cb => cb.checked = false);
+  updatePrintButton();
+}
+
+function updatePrintButton() {
+  const selectedCheckboxes = document.querySelectorAll('input[type="checkbox"].install-select:checked');
+  const printBtn = document.getElementById('printSelectedBtn');
+  const countSpan = document.getElementById('selectedCount');
+  
+  if (selectedCheckboxes.length > 0) {
+    printBtn.disabled = false;
+    countSpan.textContent = selectedCheckboxes.length;
+  } else {
+    printBtn.disabled = true;
+    countSpan.textContent = '0';
+  }
+}
+
+function toggleSelectAll(type) {
+  const selectAllCheckbox = document.getElementById('selectAllInstalls');
+  const installCheckboxes = document.querySelectorAll('input[type="checkbox"].install-select');
+  
+  installCheckboxes.forEach(cb => {
+    cb.checked = selectAllCheckbox.checked;
+  });
+  
+  updatePrintButton();
+}
+
+function printSelectedInstalls() {
+  const selectedInstalls = [];
+  const checkboxes = document.querySelectorAll('input[type="checkbox"].install-select:checked');
+  
+  checkboxes.forEach(cb => {
+    const installId = cb.value;
+    const install = allInstalls.find(i => i.install_id == installId);
+    if (install) selectedInstalls.push(install);
+  });
+  
+  if (selectedInstalls.length === 0) {
+    alert('Please select at least one install to print.');
+    return;
+  }
+  
+  printInstallList(selectedInstalls);
+}
+
+function printInstallList(installs) {
+  const printContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Install Report - ${new Date().toLocaleDateString()}</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .install-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        .install-table th, .install-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .install-table th { background-color: #f5f5f5; font-weight: bold; }
+        .install-header { background-color: #e9ecef; font-weight: bold; }
+        @media print { body { margin: 0; } }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>iWoodFix-IT Install Report</h1>
+        <p>Generated on: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</p>
+        <p>Total Installs: ${installs.length}</p>
+      </div>
+      
+      <table class="install-table">
+        <thead>
+          <tr>
+            <th>Install ID</th>
+            <th>Customer</th>
+            <th>Phone</th>
+            <th>Description</th>
+            <th>Date</th>
+            <th>Estimate</th>
+            <th>Item Total</th>
+            <th>Subtotal</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${installs.map(install => `
+            <tr>
+              <td>${install.install_id}</td>
+              <td>${install.first_name} ${install.last_name}</td>
+              <td>${install.phone || 'N/A'}</td>
+              <td>${install.description || 'N/A'}</td>
+              <td>${new Date(install.install_date).toLocaleDateString()}</td>
+              <td>$${install.estimate ? parseFloat(install.estimate).toFixed(2) : '0.00'}</td>
+              <td>$${install.install_items_total ? parseFloat(install.install_items_total).toFixed(2) : '0.00'}</td>
+              <td>$${install.subtotal ? parseFloat(install.subtotal).toFixed(2) : '0.00'}</td>
+              <td>${install.notes || 'N/A'}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      
+      <script>
+        window.onload = function() { 
+          window.print(); 
+          setTimeout(() => window.close(), 1000);
+        }
+      </script>
+    </body>
+    </html>
+  `;
+  
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(printContent);
+  printWindow.document.close();
+}
+
+// Sorting functionality
+function applySorting() {
+  const activeSort = document.querySelector('.filter-btn[data-sort].active');
+  if (!activeSort || activeSort.getAttribute('data-sort') === 'none') {
+    filteredInstalls = [...allInstalls];
+  } else {
+    const sortType = activeSort.getAttribute('data-sort');
+    filteredInstalls = [...allInstalls].sort((a, b) => {
+      switch (sortType) {
+        case 'customer-asc':
+          return `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`);
+        case 'customer-desc':
+          return `${b.first_name} ${b.last_name}`.localeCompare(`${a.first_name} ${a.last_name}`);
+        case 'date-newest':
+          return new Date(b.install_date) - new Date(a.install_date);
+        case 'date-oldest':
+          return new Date(a.install_date) - new Date(b.install_date);
+        default:
+          return 0;
+      }
+    });
+  }
+  renderInstalls();
+}
+
+// Item expansion functionality
+async function expandRow(installId) {
+  const existingRow = document.getElementById(`items-${installId}`);
+  if (existingRow) {
+    existingRow.remove();
+    return;
+  }
+
+  try {
+    const response = await fetch(`/installs/${installId}/items`);
+    const items = await response.json();
+    
+    const installRow = document.querySelector(`tr[data-install-id="${installId}"]`);
+    const itemsRow = document.createElement('tr');
+    itemsRow.id = `items-${installId}`;
+    itemsRow.className = 'items-breakdown';
+    
+    const itemsHtml = items.length > 0 ? `
+      <div class="items-container" style="padding: 15px;">
+        <h4>Install Items:</h4>
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="background-color: #f8f9fa;">
+              <th style="border: 1px solid #dee2e6; padding: 6px;">Item</th>
+              <th style="border: 1px solid #dee2e6; padding: 6px;">Color/Model</th>
+              <th style="border: 1px solid #dee2e6; padding: 6px;">Price</th>
+              <th style="border: 1px solid #dee2e6; padding: 6px;">Qty</th>
+              <th style="border: 1px solid #dee2e6; padding: 6px;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items.map(item => `
+              <tr>
+                <td style="border: 1px solid #dee2e6; padding: 6px;">${item.item_name}</td>
+                <td style="border: 1px solid #dee2e6; padding: 6px;">${item.item_color} ${item.item_model}</td>
+                <td style="border: 1px solid #dee2e6; padding: 6px;">$${parseFloat(item.price).toFixed(2)}</td>
+                <td style="border: 1px solid #dee2e6; padding: 6px;">${item.install_item_quantity}</td>
+                <td style="border: 1px solid #dee2e6; padding: 6px;">$${parseFloat(item.total_price).toFixed(2)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+          <tfoot>
+            <tr style="background-color: #f8f9fa; font-weight: bold;">
+              <td colspan="4" style="border: 1px solid #dee2e6; padding: 6px;">Total:</td>
+              <td style="border: 1px solid #dee2e6; padding: 6px;">$${items.reduce((sum, item) => sum + parseFloat(item.total_price), 0).toFixed(2)}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    ` : '<div style="padding: 15px; text-align: center; color: #666;">No items found for this install</div>';
+    
+    itemsRow.innerHTML = `<td colspan="12" style="padding: 0; background-color: #f8f9fa; border: none;">${itemsHtml}</td>`;
+    installRow.insertAdjacentElement('afterend', itemsRow);
+    
+  } catch (error) {
+    console.error('Error loading install items:', error);
+    alert('Failed to load install items');
+  }
+}
+
 async function loadInstalls() {
   const customerId = document.getElementById('customer_id').value;
   try {
@@ -13,7 +227,7 @@ async function loadInstalls() {
     if (!res.ok) throw new Error('Failed to fetch install summary');
     
     allInstalls = await res.json();
-    applyFiltering();
+    applySorting();
   } catch (err) {
     console.error(err);
     alert('Could not load installs. Try again later.');
@@ -28,34 +242,26 @@ function renderInstalls() {
     const tr = document.createElement('tr');
     tr.setAttribute('data-install-id', install.install_id);
     tr.innerHTML = `
-      <td><input type="checkbox" class="install-select" value="${install.install_id}"></td>
+      <td><input type="checkbox" class="install-select" value="${install.install_id}" onchange="updatePrintButton()"></td>
       <td>${install.install_id}</td>
+      <td>${install.customer_id || 'N/A'}</td>
       <td>${install.first_name} ${install.last_name}</td>
+      <td>${install.phone || 'N/A'}</td>
+      <td>${install.description || 'N/A'}</td>
       <td>${new Date(install.install_date).toLocaleDateString()}</td>
-      <td>
-        <button class="expand-btn" onclick="expandRow(${install.install_id})" title="View install items">
-          ${install.item_count || 0} items
-        </button>
-      </td>
       <td>$${install.estimate ? parseFloat(install.estimate).toFixed(2) : '0.00'}</td>
+      <td>$${install.install_items_total ? parseFloat(install.install_items_total).toFixed(2) : '0.00'}</td>
       <td>$${install.subtotal ? parseFloat(install.subtotal).toFixed(2) : '0.00'}</td>
-      <td>
-        <span class="status-badge status-scheduled">
-          Scheduled
-        </span>
-      </td>
+      <td>${install.notes || 'N/A'}</td>
       <td>
         <button onclick="editInstall(${install.install_id})" class="summary-table button">Edit</button>
-        <button onclick="printInstall(${install.install_id})" class="summary-table button">Print</button>
       </td>
     `;
     tbody.appendChild(tr);
   });
-}
-
-function printInstall(installId) {
-  // Implementation for printing individual install
-  window.open(`/installs/print/${installId}`, '_blank');
+  
+  // Update print button state after rendering
+  updatePrintButton();
 }
 
 function editInstall(installId) {
@@ -107,4 +313,10 @@ document.addEventListener('DOMContentLoaded', () => {
       applySorting();
     });
   });
+  
+  // Select all installs checkbox
+  const selectAllCheckbox = document.getElementById('selectAllInstalls');
+  if (selectAllCheckbox) {
+    selectAllCheckbox.addEventListener('change', () => toggleSelectAll('installs'));
+  }
 });
