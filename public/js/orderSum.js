@@ -249,7 +249,6 @@ function renderOrders() {
       </td>
       <td>
         <button onclick="editOrder(${order.order_id})" class="summary-table button">Edit</button>
-        <button onclick="printOrder(${order.order_id})" class="summary-table button">Print</button>
       </td>
     `;
     tbody.appendChild(tr);
