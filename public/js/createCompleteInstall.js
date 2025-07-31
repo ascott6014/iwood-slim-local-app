@@ -449,7 +449,7 @@ function showInstallSuccessWithSummary(result) {
         Print Install Ticket
       </button>
       <br><br>
-      <button type="button" onclick="location.href='index.html'">← Back to Home</button>
+      <button type="button" onclick="location.href='index.html'">Back to Home</button>
     </div>
   `;
   
