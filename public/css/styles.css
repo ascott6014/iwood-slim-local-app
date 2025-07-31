@@ -682,6 +682,17 @@ button:hover {
   white-space: nowrap;
 }
 
+/* Override for remove buttons in item search rows */
+.item-search-row button.remove-item-btn {
+  background-color: #dc3545 !important;
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.item-search-row button.remove-item-btn:hover {
+  background-color: #c82333 !important;
+}
+
 .item-search-row button:hover {
   background-color: #218838;
   transform: translateY(-1px);
@@ -936,6 +947,15 @@ button:hover {
   cursor: pointer;
 }
 
+/* Override for remove buttons in summary tables */
+.summary-table button.remove-item-btn {
+  background-color: #dc3545 !important;
+}
+
+.summary-table button.remove-item-btn:hover {
+  background-color: #c82333 !important;
+}
+
 /* Specific styling for customer action buttons only */
 #newCustomerBtn,
 #changeCustomerBtn {
@@ -1092,4 +1112,405 @@ button:hover {
 .items-breakdown table tfoot td {
   background-color: #f8f9fa !important;
   font-weight: bold;
+}
+
+/* Success Page Styling */
+.success-section {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 30px;
+}
+
+.success-title {
+  color: #155724;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.success-details p {
+  margin-bottom: 10px;
+  font-size: 16px;
+  color: #333;
+}
+
+.success-actions {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.success-print-btn {
+  background-color: #28a745 !important;
+  color: white !important;
+  margin-right: 10px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.success-print-btn:hover {
+  background-color: #218838 !important;
+}
+
+.success-home-btn {
+  background-color: #2978b5 !important;
+  color: white !important;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.success-home-btn:hover {
+  background-color: #195a84 !important;
+}
+
+/* Item Details Table in Success/Print Pages */
+.success-items-title {
+  color: #333;
+  margin-top: 20px;
+  margin-bottom: 15px;
+}
+
+.success-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  background-color: white;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.success-items-table th {
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  padding: 8px;
+  font-weight: 600;
+  color: #333;
+}
+
+.success-items-table th.text-left {
+  text-align: left;
+}
+
+.success-items-table th.text-center {
+  text-align: center;
+}
+
+.success-items-table th.text-right {
+  text-align: right;
+}
+
+.success-items-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  color: #333;
+}
+
+.success-items-table td.text-center {
+  text-align: center;
+}
+
+.success-items-table td.text-right {
+  text-align: right;
+}
+
+.success-items-table tfoot tr {
+  background-color: #f8f9fa;
+  font-weight: bold;
+}
+
+.success-items-table tfoot td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  font-weight: bold;
+}
+
+.success-items-table tfoot td.text-right {
+  text-align: right;
+}
+
+/* Address/Contact Styling */
+.contact-info {
+  color: #666;
+  font-size: 14px;
+}
+
+/* Empty state styling */
+.empty-state {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 20px;
+}
+
+.empty-state-table {
+  text-align: center;
+  color: #666;
+}
+
+/* Remove button styling - high specificity to override other button styles */
+.remove-item-btn,
+button.remove-item-btn,
+.summary-table .remove-item-btn,
+.item-search-row .remove-item-btn {
+  background-color: #dc3545 !important;
+  color: white !important;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.remove-item-btn:hover,
+button.remove-item-btn:hover,
+.summary-table .remove-item-btn:hover,
+.item-search-row .remove-item-btn:hover {
+  background-color: #c82333 !important;
+}
+
+/* Print page specific styling */
+.print-header-text {
+  margin-top: 30px;
+  text-align: center;
+  font-size: 12px;
+  color: #666;
+}
+
+.print-page-break {
+  page-break-before: always;
+}
+
+.print-no-print {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.print-button {
+  padding: 10px 20px;
+  font-size: 14px;
+  margin-right: 10px;
+  background-color: #2978b5;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.print-button:hover {
+  background-color: #195a84;
+}
+
+.print-close-btn {
+  padding: 10px 20px;
+  font-size: 14px;
+  margin-left: 10px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.print-close-btn:hover {
+  background-color: #545b62;
+}
+
+.print-info-row {
+  font-size: 16px;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.print-footer {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 8px;
+  color: #666;
+}
+
+/* Grid layout styling */
+.grid-column-span {
+  grid-column: 1 / -1;
+}
+
+/* Item container styling for expandable rows */
+.item-container-padding {
+  padding: 15px;
+}
+
+.item-container-hidden {
+  display: none;
+}
+
+.item-container-padding-small {
+  padding: 10px;
+}
+
+.item-no-items {
+  padding: 10px;
+  color: #666;
+  text-align: center;
+  font-style: italic;
+}
+
+/* Checkbox styling for selection */
+.selection-checkbox {
+  transform: scale(1.2);
+  margin: 0;
+}
+
+/* Items breakdown container styling */
+.items-breakdown-container {
+  padding: 0;
+  background-color: #f8f9fa;
+  border: none;
+}
+
+.items-breakdown-no-items {
+  padding: 15px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+}
+
+@media print {
+  .print-no-print {
+    display: none !important;
+  }
+  
+  .success-actions {
+    display: none !important;
+  }
+}
+
+/* Additional utility classes for better organization */
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.display-none {
+  display: none;
+}
+
+.display-block {
+  display: block;
+}
+
+/* Container padding variations */
+.container-padding {
+  padding: 15px;
+}
+
+.container-padding-small {
+  padding: 10px;
+}
+
+/* Responsive text sizing */
+.text-large {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.text-small {
+  font-size: 12px;
+  color: #666;
+}
+
+.text-extra-small {
+  font-size: 8px;
+  color: #666;
+}
+
+/* Table styling classes for consistent table presentation */
+.items-table-header {
+  background-color: #f8f9fa;
+}
+
+.table-header-cell {
+  border: 1px solid #dee2e6;
+  padding: 6px;
+}
+
+.table-cell {
+  border: 1px solid #dee2e6;
+  padding: 6px;
+}
+
+.table-cell-center {
+  border: 1px solid #dee2e6;
+  padding: 6px;
+  text-align: center;
+}
+
+.table-cell-right {
+  border: 1px solid #dee2e6;
+  padding: 6px;
+  text-align: right;
+}
+
+.table-total-row {
+  background-color: #f8f9fa;
+  font-weight: bold;
+}
+
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+}
+
+.items-container-padding {
+  padding: 15px;
+}
+
+.no-items-message {
+  padding: 15px;
+  text-align: center;
+  color: #666;
+}
+
+.order-success-message {
+  grid-column: 1 / -1;
+  font-weight: bold;
+}
+
+.order-notes {
+  grid-column: 1 / -1;
+}
+
+.quantity-input {
+  width: 60px;
+}
+
+.footer-timestamp {
+  margin-top: 30px;
+  text-align: center;
+  font-size: 12px;
+  color: #666;
+}
+
+.left-align {
+  text-align: left;
+}
+
+/* Error message styling */
+.error-message {
+  padding: 10px;
+  color: #dc3545;
 }

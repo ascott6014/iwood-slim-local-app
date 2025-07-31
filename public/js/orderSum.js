@@ -310,40 +310,40 @@ async function expandRow(orderId) {
     itemsRow.className = 'items-breakdown';
     
     const itemsHtml = items.length > 0 ? `
-      <div class="items-container" style="padding: 15px;">
+      <div class="items-container item-container-padding">
         <h4>Order Items:</h4>
-        <table style="width: 100%; border-collapse: collapse;">
+        <table class="success-items-table">
           <thead>
-            <tr style="background-color: #f8f9fa;">
-              <th style="border: 1px solid #dee2e6; padding: 6px;">Item</th>
-              <th style="border: 1px solid #dee2e6; padding: 6px;">Color/Model</th>
-              <th style="border: 1px solid #dee2e6; padding: 6px;">Price</th>
-              <th style="border: 1px solid #dee2e6; padding: 6px;">Qty</th>
-              <th style="border: 1px solid #dee2e6; padding: 6px;">Total</th>
+            <tr>
+              <th class="text-left">Item</th>
+              <th class="text-left">Color/Model</th>
+              <th class="text-right">Price</th>
+              <th class="text-center">Qty</th>
+              <th class="text-right">Total</th>
             </tr>
           </thead>
           <tbody>
             ${items.map(item => `
               <tr>
-                <td style="border: 1px solid #dee2e6; padding: 6px;">${item.item_name}</td>
-                <td style="border: 1px solid #dee2e6; padding: 6px;">${item.item_color} ${item.item_model}</td>
-                <td style="border: 1px solid #dee2e6; padding: 6px;">$${parseFloat(item.price).toFixed(2)}</td>
-                <td style="border: 1px solid #dee2e6; padding: 6px;">${item.order_item_quantity}</td>
-                <td style="border: 1px solid #dee2e6; padding: 6px;">$${parseFloat(item.total_price).toFixed(2)}</td>
+                <td>${item.item_name}</td>
+                <td>${item.item_color} ${item.item_model}</td>
+                <td class="text-right">$${parseFloat(item.price).toFixed(2)}</td>
+                <td class="text-center">${item.order_item_quantity}</td>
+                <td class="text-right">$${parseFloat(item.total_price).toFixed(2)}</td>
               </tr>
             `).join('')}
           </tbody>
           <tfoot>
-            <tr style="background-color: #f8f9fa; font-weight: bold;">
-              <td colspan="4" style="border: 1px solid #dee2e6; padding: 6px;">Total:</td>
-              <td style="border: 1px solid #dee2e6; padding: 6px;">$${items.reduce((sum, item) => sum + parseFloat(item.total_price), 0).toFixed(2)}</td>
+            <tr>
+              <td colspan="4" class="text-right">Total:</td>
+              <td class="text-right">$${items.reduce((sum, item) => sum + parseFloat(item.total_price), 0).toFixed(2)}</td>
             </tr>
           </tfoot>
         </table>
       </div>
-    ` : '<div style="padding: 15px; text-align: center; color: #666;">No items found for this order</div>';
-    
-    itemsRow.innerHTML = `<td colspan="10" style="padding: 0; background-color: #f8f9fa; border: none;">${itemsHtml}</td>`;
+    ` : '<div class="items-breakdown-no-items">No items found for this order</div>';
+
+    itemsRow.innerHTML = `<td colspan="10" class="items-breakdown-container">${itemsHtml}</td>`;
     orderRow.insertAdjacentElement('afterend', itemsRow);
     
   } catch (error) {

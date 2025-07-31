@@ -32,7 +32,7 @@ async function searchCustomers() {
         <div class="search-result-item" onclick="selectCustomer(${customer.customer_id}, '${customer.first_name}', '${customer.last_name}', '${customer.phone}', '${customer.email}', '${customer.address}', '${customer.city}', '${customer.state}', '${customer.zip}')">
           <strong>${customer.first_name} ${customer.last_name}</strong><br>
           <span>${customer.phone} | ${customer.email}</span><br>
-          <span style="color: #666;">${customer.address}, ${customer.city}, ${customer.state} ${customer.zip}</span>
+          <span class="contact-info">${customer.address}, ${customer.city}, ${customer.state} ${customer.zip}</span>
         </div>
       `).join('');
     }
@@ -67,7 +67,7 @@ function selectCustomer(id, firstName, lastName, phone, email, address, city, st
     <div class="customer-display">
       <strong>${firstName} ${lastName}</strong><br>
       <span>${phone} | ${email}</span><br>
-      <span style="color: #666;">${address}, ${city}, ${state} ${zip}</span>
+      <span class="contact-info">${address}, ${city}, ${state} ${zip}</span>
     </div>
   `;
   
@@ -207,7 +207,7 @@ function updateItemsTable() {
         <td>${item.quantity}</td>
         <td>$${item.total.toFixed(2)}</td>
         <td>
-          <button onclick="removeItemFromRepair(${index})" class="summary-table button" style="background-color: #dc3545;">Remove</button>
+          <button onclick="removeItemFromRepair(${index})" class="remove-item-btn">Remove</button>
         </td>
       `;
       tbody.appendChild(row);
@@ -488,12 +488,12 @@ function showRepairSuccess(result) {
     <p><strong>Estimate:</strong> $${parseFloat(document.getElementById('estimate').value).toFixed(2)}</p>
     ${selectedItems.length > 0 ? `<p><strong>Repair Items Total:</strong> $${totalItemsAmount.toFixed(2)}</p>` : ''}
     ${selectedItems.length > 0 ? `<p><strong>Total (Estimate + Items):</strong> $${(parseFloat(document.getElementById('estimate').value) + totalItemsAmount).toFixed(2)}</p>` : ''}
-    <div style="margin-top: 20px;">
-      <button type="button" onclick="printRepairTicket({repair_id: ${result.repair_id}})" class="submit-button" style="background-color: #28a745; margin-right: 10px;">
+    <div class="success-actions">
+      <button type="button" onclick="printRepairTicket({repair_id: ${result.repair_id}})" class="success-print-btn">
         Print Repair Ticket
       </button>
       <br><br>
-      <button type="button" onclick="location.href='index.html'">← Back to Home</button>
+      <button type="button" onclick="location.href='index.html'" class="success-home-btn">← Back to Home</button>
     </div>
   `;
   
@@ -681,7 +681,7 @@ function printRepairTicket(result) {
         <div class="section-title">Cost Summary</div>
         <div class="info-row"><span class="label">Labor Estimate:</span> $${estimate.toFixed(2)}</div>
         ${selectedItems.length > 0 ? `<div class="info-row"><span class="label">Parts/Items:</span> $${totalItemsAmount.toFixed(2)}</div>` : ''}
-        <div class="info-row" style="font-size: 16px; font-weight: bold; margin-top: 10px;">
+        <div class="total-row">
           <span class="label">TOTAL ESTIMATE:</span> $${(estimate + totalItemsAmount).toFixed(2)}
         </div>
       </div>
@@ -692,14 +692,14 @@ function printRepairTicket(result) {
         <p>Please keep this ticket for your records.</p>
       </div>
       
-      <div class="no-print" style="margin-top: 20px; text-align: center;">
-        <button onclick="window.print()" style="padding: 10px 20px; font-size: 14px;">Print Both Copies</button>
-        <button onclick="window.close()" style="padding: 10px 20px; font-size: 14px; margin-left: 10px;">Close</button>
+      <div class="print-controls">
+        <button onclick="window.print()" class="print-btn">Print Both Copies</button>
+        <button onclick="window.close()" class="close-btn">Close</button>
       </div>
     </body>
     </html>
     
-    <div style="page-break-before: always;"></div>
+    <div class="page-break"></div>
     
     <!DOCTYPE html>
     <html>
@@ -795,7 +795,7 @@ function printRepairTicket(result) {
         TOTAL ESTIMATE: $${(estimate + totalItemsAmount).toFixed(2)}
       </div>
       
-      <div style="margin-top: 10px; text-align: center; font-size: 8px;">
+      <div class="print-timestamp">
         Created: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
       </div>
     </body>

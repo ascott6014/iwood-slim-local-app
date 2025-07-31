@@ -31,7 +31,7 @@ async function searchCustomers() {
         <div class="search-result-item" onclick="selectCustomer(${customer.customer_id}, '${customer.first_name}', '${customer.last_name}', '${customer.phone}', '${customer.email}', '${customer.address}', '${customer.city}', '${customer.state}', '${customer.zip}')">
           <strong>${customer.first_name} ${customer.last_name}</strong><br>
           <span>${customer.phone} | ${customer.email}</span><br>
-          <span style="color: #666;">${customer.address}, ${customer.city}, ${customer.state} ${customer.zip}</span>
+          <span class="contact-info">${customer.address}, ${customer.city}, ${customer.state} ${customer.zip}</span>
         </div>
       `).join('');
     }
@@ -66,7 +66,7 @@ function selectCustomer(id, firstName, lastName, phone, email, address, city, st
     <div class="customer-display">
       <strong>${firstName} ${lastName}</strong><br>
       <span>${phone} | ${email}</span><br>
-      <span style="color: #666;">${address}, ${city}, ${state} ${zip}</span>
+      <span class="contact-info">${address}, ${city}, ${state} ${zip}</span>
     </div>
   `;
   
@@ -188,7 +188,7 @@ function updateItemsTable() {
   const noItemsRow = document.getElementById('noItemsRow');
 
   if (selectedItems.length === 0) {
-    tbody.innerHTML = '<tr id="noItemsRow"><td colspan="7" style="text-align: center; color: #666;">No items added yet</td></tr>';
+    tbody.innerHTML = '<tr id="noItemsRow"><td colspan="7" class="empty-state-table">No items added yet</td></tr>';
     document.getElementById('installItemsTotal').textContent = '$0.00';
     return;
   }
@@ -204,7 +204,7 @@ function updateItemsTable() {
         <td>$${price.toFixed(2)}</td>
         <td>${item.quantity}</td>
         <td>$${total.toFixed(2)}</td>
-        <td><button onclick="removeItem(${index})" class="remove-btn" style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Remove</button></td>
+        <td><button onclick="removeItem(${index})" class="remove-item-btn">Remove</button></td>
       </tr>
     `;
   }).join('');
@@ -405,14 +405,14 @@ function showInstallSuccessWithSummary(result) {
   let itemsHTML = '';
   if (selectedItems.length > 0) {
     itemsHTML = `
-      <h3 style="color: #333; margin-top: 20px;">Install Items:</h3>
-      <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+      <h3 class="success-items-title">Install Items:</h3>
+      <table class="success-items-table">
         <thead>
-          <tr style="background-color: #f8f9fa;">
-            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Item</th>
-            <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Qty</th>
-            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Price</th>
-            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Total</th>
+          <tr>
+            <th class="text-left">Item</th>
+            <th class="text-center">Qty</th>
+            <th class="text-right">Price</th>
+            <th class="text-right">Total</th>
           </tr>
         </thead>
         <tbody>
@@ -421,18 +421,18 @@ function showInstallSuccessWithSummary(result) {
             const total = price * item.quantity;
             return `
               <tr>
-                <td style="border: 1px solid #ddd; padding: 8px;">${item.item_name} - ${item.item_color} - ${item.item_model}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${item.quantity}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">$${price.toFixed(2)}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">$${total.toFixed(2)}</td>
+                <td>${item.item_name} - ${item.item_color} - ${item.item_model}</td>
+                <td class="text-center">${item.quantity}</td>
+                <td class="text-right">$${price.toFixed(2)}</td>
+                <td class="text-right">$${total.toFixed(2)}</td>
               </tr>
             `;
           }).join('')}
         </tbody>
         <tfoot>
-          <tr style="background-color: #f8f9fa; font-weight: bold;">
-            <td colspan="3" style="border: 1px solid #ddd; padding: 8px; text-align: right;">Items Subtotal:</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">$${itemsTotal.toFixed(2)}</td>
+          <tr>
+            <td colspan="3" class="text-right">Items Subtotal:</td>
+            <td class="text-right">$${itemsTotal.toFixed(2)}</td>
           </tr>
         </tfoot>
       </table>
@@ -444,12 +444,12 @@ function showInstallSuccessWithSummary(result) {
     <p><strong>Customer:</strong> ${customerInfo.name}</p>
     <p><strong>Total Items:</strong> ${selectedItems.length}</p>
     <p><strong>Total Amount:</strong> $${totalCost.toFixed(2)}</p>
-    <div style="margin-top: 20px;">
-      <button type="button" onclick="printInstallTicket({install_id: ${result.install_id}})" class="submit-button" style="background-color: #28a745; margin-right: 10px;">
+    <div class="success-actions">
+      <button type="button" onclick="printInstallTicket({install_id: ${result.install_id}})" class="success-print-btn">
         Print Install Ticket
       </button>
       <br><br>
-      <button type="button" onclick="location.href='index.html'">Back to Home</button>
+      <button type="button" onclick="location.href='index.html'" class="success-home-btn">Back to Home</button>
     </div>
   `;
   
@@ -508,7 +508,7 @@ function printInstallSummary() {
     </head>
     <body>
       ${summaryContent}
-      <div style="margin-top: 30px; text-align: center; font-size: 12px; color: #666;">
+      <div class="print-header-text">
         Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}
       </div>
     </body>
@@ -543,8 +543,8 @@ function showInstallSuccess(result) {
     <p><strong>Description:</strong> ${installDescription}</p>
     <p><strong>Estimate:</strong> $${installEstimate.toFixed(2)}</p>
     <p><strong>Scheduled Date:</strong> ${installDate.toLocaleDateString()}</p>
-    <div style="margin-top: 20px;">
-      <button onclick="printInstallTicket(${JSON.stringify(result).replace(/"/g, '&quot;')})" class="submit-button" style="background-color: #28a745; margin-right: 10px;">
+    <div class="success-actions">
+      <button onclick="printInstallTicket(${JSON.stringify(result).replace(/"/g, '&quot;')})" class="success-print-btn">
         Print Install Ticket
       </button>
     </div>
@@ -678,7 +678,7 @@ async function printInstallWithItems(result) {
           <div><strong>Estimate:</strong> $${install.estimate.toFixed(2)}</div>
           <div><strong>Item Total:</strong> $${install.install_items_total.toFixed(2)}</div>
           <div><strong>Subtotal:</strong> $${install.subtotal.toFixed(2)}</div>
-          <div style="grid-column: 1 / -1;"><strong>Notes:</strong> ${install.notes || 'N/A'}</div>
+          <div class="grid-column-span"><strong>Notes:</strong> ${install.notes || 'N/A'}</div>
         </div>
         
         ${install.items && install.items.length > 0 ? `

@@ -51,7 +51,7 @@ async function loadRepairs() {
         : `<button class="pickup-btn" onclick="markAsPickedUp(${r.repair_id})">Picked Up</button>`;
       
       tr.innerHTML = `
-        <td><input type="checkbox" data-item-id="${r.repair_id}" onchange="toggleItemSelection('${r.repair_id}', this)" style="transform: scale(1.2); margin: 0;"></td>
+        <td><input type="checkbox" data-item-id="${r.repair_id}" onchange="toggleItemSelection('${r.repair_id}', this)" class="selection-checkbox"></td>
         <td>${r.repair_id}</td>
         <td>${r.customer_id}</td>
         <td>${r.first_name} ${r.last_name}</td>
@@ -105,7 +105,7 @@ async function loadRepairs() {
       itemsRow.innerHTML = `
         <td colspan="18">
           <div class="loading" id="loading-${r.repair_id}">Loading repair items...</div>
-          <div class="items-container" id="items-container-${r.repair_id}" style="display: none;"></div>
+          <div class="items-container item-container-hidden" id="items-container-${r.repair_id}"></div>
         </td>
       `;
       tbody.appendChild(itemsRow);
@@ -436,7 +436,7 @@ async function printRepairListWithItems(repairs) {
             <div><strong>Status:</strong> <span class="status-badge status-${repair.status.toLowerCase().replace(/\s+/g, '-')}">${repair.status}</span></div>
             <div><strong>Estimate:</strong> $${repair.estimate ? parseFloat(repair.estimate).toFixed(2) : '0.00'}</div>
             <div><strong>Item Total:</strong> $${repair.repair_items_total ? parseFloat(repair.repair_items_total).toFixed(2) : '0.00'}</div>
-            <div style="grid-column: 1 / -1;"><strong>Notes:</strong> ${repair.notes || 'N/A'}</div>
+            <div class="grid-column-span"><strong>Notes:</strong> ${repair.notes || 'N/A'}</div>
           </div>
           
           ${repair.items && repair.items.length > 0 ? `
@@ -602,7 +602,7 @@ function printIndividualRepairTicket(repairId, firstName, lastName, phone, email
         <div class="section-title">Cost Summary</div>
         <div class="info-row"><span class="label">Labor Estimate:</span> $${estimateAmount.toFixed(2)}</div>
         ${itemsTotal > 0 ? `<div class="info-row"><span class="label">Parts/Items:</span> $${itemsTotal.toFixed(2)}</div>` : ''}
-        <div class="info-row" style="font-size: 16px; font-weight: bold; margin-top: 10px;">
+        <div class="info-row print-info-row">
           <span class="label">TOTAL ESTIMATE:</span> $${(estimateAmount + itemsTotal).toFixed(2)}
         </div>
       </div>
@@ -613,14 +613,14 @@ function printIndividualRepairTicket(repairId, firstName, lastName, phone, email
         <p>Please keep this ticket for your records.</p>
       </div>
       
-      <div class="no-print" style="margin-top: 20px; text-align: center;">
-        <button onclick="window.print()" style="padding: 10px 20px; font-size: 14px;">Print Both Copies</button>
-        <button onclick="window.close()" style="padding: 10px 20px; font-size: 14px; margin-left: 10px;">Close</button>
+      <div class="print-no-print">
+        <button onclick="window.print()" class="print-button">Print Both Copies</button>
+        <button onclick="window.close()" class="print-close-btn">Close</button>
       </div>
     </body>
     </html>
     
-    <div style="page-break-before: always;"></div>
+    <div class="print-page-break"></div>
     
     <!DOCTYPE html>
     <html>
@@ -716,7 +716,7 @@ function printIndividualRepairTicket(repairId, firstName, lastName, phone, email
         TOTAL ESTIMATE: $${(estimateAmount + itemsTotal).toFixed(2)}
       </div>
       
-      <div style="margin-top: 10px; text-align: center; font-size: 8px;">
+      <div class="print-footer">
         Created: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
       </div>
     </body>
@@ -757,20 +757,20 @@ async function toggleRepairItems(repairId, button) {
         loadingDiv.style.display = 'none';
         
         if (items.length === 0) {
-          itemsContainer.innerHTML = '<p style="padding: 10px; color: #666;">No items found for this repair.</p>';
+          itemsContainer.innerHTML = '<p class="item-no-items">No items found for this repair.</p>';
         } else {
           let itemsHtml = `
-            <div style="padding: 10px;">
+            <div class="item-container-padding-small">
               <h4>Repair Items Breakdown:</h4>
-              <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+              <table class="success-items-table">
                 <thead>
-                  <tr style="background-color: #f8f9fa;">
-                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Item Name</th>
-                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Color</th>
-                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Model</th>
-                    <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Price</th>
-                    <th style="border: 1px solid #ddd; padding: 8px; text-align: center;">Quantity</th>
-                    <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Total</th>
+                  <tr>
+                    <th class="text-left">Item Name</th>
+                    <th class="text-left">Color</th>
+                    <th class="text-left">Model</th>
+                    <th class="text-right">Price</th>
+                    <th class="text-center">Quantity</th>
+                    <th class="text-right">Total</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -782,12 +782,12 @@ async function toggleRepairItems(repairId, button) {
             totalAmount += itemTotal;
             itemsHtml += `
               <tr>
-                <td style="border: 1px solid #ddd; padding: 8px;">${item.item_name}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">${item.item_color}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">${item.item_model}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">$${parseFloat(item.price).toFixed(2)}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${item.repair_item_quantity}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">$${itemTotal.toFixed(2)}</td>
+                <td>${item.item_name}</td>
+                <td>${item.item_color}</td>
+                <td>${item.item_model}</td>
+                <td class="text-right">$${parseFloat(item.price).toFixed(2)}</td>
+                <td class="text-center">${item.repair_item_quantity}</td>
+                <td class="text-right">$${itemTotal.toFixed(2)}</td>
               </tr>
             `;
           });

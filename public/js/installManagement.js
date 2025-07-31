@@ -83,7 +83,7 @@ async function loadInstallItems() {
         </td>
         <td>$${itemTotal.toFixed(2)}</td>
         <td>
-          <button onclick="removeInstallItem(${item.install_item_id})" class="remove-btn">Remove</button>
+          <button onclick="removeInstallItem(${item.install_item_id})" class="remove-item-btn">Remove</button>
         </td>
       `;
       tbody.appendChild(row);

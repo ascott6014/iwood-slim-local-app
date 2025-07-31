@@ -74,8 +74,7 @@ async function loadOrderItems() {
         </td>
         <td>$${parseFloat(item.total_price).toFixed(2)}</td>
         <td>
-          <button onclick="removeItem(${item.order_item_id})" class="summary-table button" 
-                  style="background-color: #dc3545;">Remove</button>
+          <button onclick="removeItem(${item.order_item_id})" class="remove-item-btn">Remove</button>
         </td>
       `;
       tbody.appendChild(tr);
