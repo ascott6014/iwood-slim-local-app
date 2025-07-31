@@ -475,8 +475,7 @@ async function addItemsToRepair(repairId) {
 }
 
 function showRepairSuccess(result) {
-  document.getElementById('itemSelectionSection').style.display = 'none';
-  
+  // Don't hide the form sections - just show the success message at the bottom
   const successSection = document.getElementById('successMessage');
   const detailsDiv = document.getElementById('repairDetails');
   
@@ -494,7 +493,7 @@ function showRepairSuccess(result) {
         Print Repair Ticket
       </button>
       <br><br>
-      <button type="button" onclick="location.href='index.html'">⬅️ Back to Home</button>
+      <button type="button" onclick="location.href='index.html'">← Back to Home</button>
     </div>
   `;
   

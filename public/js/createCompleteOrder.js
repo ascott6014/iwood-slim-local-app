@@ -489,6 +489,11 @@ function showOrderSuccess(result) {
 }
 
 function printOrderTicket(result) {
+  // Use the new enhanced print function
+  printOrderWithItems(result);
+}
+
+async function printOrderWithItems(result) {
   // Get current data
   const customerName = selectedCustomer === 'new' ? 
     `${document.getElementById('firstName').value} ${document.getElementById('lastName').value}` : 
@@ -502,290 +507,148 @@ function printOrderTicket(result) {
     document.getElementById('email').value : 
     selectedCustomer.email;
 
-  const customerAddress = selectedCustomer === 'new' ? 
-    `${document.getElementById('address').value}, ${document.getElementById('city').value}, ${document.getElementById('state').value} ${document.getElementById('zip').value}` : 
-    `${selectedCustomer.address}, ${selectedCustomer.city}, ${selectedCustomer.state} ${selectedCustomer.zip}`;
+  // Fetch order items
+  let items = [];
+  try {
+    const response = await fetch(`/api/orders/${result.order_id}/items`);
+    items = await response.json();
+  } catch (error) {
+    console.error('Error loading order items:', error);
+  }
 
-  // Calculate total
-  let totalAmount = 0;
-  selectedItems.forEach(item => {
-    totalAmount += (parseFloat(item.price) * item.quantity);
-  });
+  const order = {
+    order_id: result.order_id,
+    first_name: customerName.split(' ')[0],
+    last_name: customerName.split(' ').slice(1).join(' '),
+    phone: customerPhone,
+    email: customerEmail,
+    order_date: new Date().toISOString(),
+    subtotal: items.reduce((sum, item) => sum + parseFloat(item.total_price || 0), 0),
+    items: items
+  };
 
-  // Create customer copy (full detailed version)
-  const customerCopy = `
+  const printContent = `
     <!DOCTYPE html>
     <html>
     <head>
-      <title>Order Ticket #${result.order_id} - Customer Copy</title>
+      <title>Order Report - ${new Date().toLocaleDateString()}</title>
       <style>
-        body { 
-          font-family: Arial, sans-serif; 
-          margin: 20px; 
-          line-height: 1.4;
-          font-size: 12px;
-        }
-        .header { 
-          text-align: center; 
-          border-bottom: 2px solid #333; 
-          padding-bottom: 10px; 
-          margin-bottom: 20px;
-        }
-        .company-name { 
-          font-size: 18px; 
-          font-weight: bold; 
-          margin-bottom: 5px;
-        }
-        .ticket-title { 
-          font-size: 16px; 
-          font-weight: bold; 
-          margin-bottom: 20px;
-        }
-        .copy-type {
-          text-align: center;
-          font-size: 14px;
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .order-section { margin-bottom: 40px; page-break-inside: avoid; }
+        .order-header { 
+          background-color: #e9ecef; 
+          padding: 10px; 
+          margin-bottom: 15px; 
+          border: 2px solid #ddd;
           font-weight: bold;
-          color: #007bff;
-          margin-bottom: 15px;
+          font-size: 16px;
         }
-        .section { 
+        .order-info { 
+          display: grid; 
+          grid-template-columns: 1fr 1fr; 
+          gap: 10px; 
           margin-bottom: 15px; 
           padding: 10px;
-          border: 1px solid #ccc;
+          border: 1px solid #ddd;
         }
-        .section-title { 
+        .order-info div { margin: 5px 0; }
+        .items-table { 
+          width: 100%; 
+          border-collapse: collapse; 
+          margin-bottom: 15px; 
+        }
+        .items-table th, .items-table td { 
+          border: 1px solid #ddd; 
+          padding: 8px; 
+          text-align: left; 
+        }
+        .items-table th { 
+          background-color: #f5f5f5; 
           font-weight: bold; 
-          font-size: 14px; 
-          margin-bottom: 8px;
-          border-bottom: 1px solid #666;
-          padding-bottom: 3px;
         }
-        .info-row { 
-          margin: 5px 0; 
-        }
-        .label { 
+        .items-total { 
+          background-color: #f8f9fa; 
           font-weight: bold; 
-          display: inline-block; 
-          width: 120px;
         }
-        .items-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 10px;
-        }
-        .items-table th, .items-table td {
-          border: 1px solid #333;
-          padding: 5px;
-          text-align: left;
-        }
-        .items-table th {
-          background-color: #f0f0f0;
-          font-weight: bold;
-        }
-        .total-section {
-          margin-top: 15px;
-          padding: 10px;
-          border: 2px solid #333;
-          background-color: #f9f9f9;
-        }
-        .footer {
-          margin-top: 30px;
-          border-top: 1px solid #333;
-          padding-top: 10px;
-          text-align: center;
-          font-size: 10px;
-        }
-        @media print {
-          body { margin: 0; }
-          .no-print { display: none; }
-        }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <div class="company-name">iWoodFix-IT</div>
-      </div>
-      
-      <div class="copy-type">CUSTOMER COPY</div>
-      <div class="ticket-title">ORDER TICKET #${result.order_id}</div>
-      
-      <div class="section">
-        <div class="section-title">Customer Information</div>
-        <div class="info-row"><span class="label">Name:</span> ${customerName}</div>
-        <div class="info-row"><span class="label">Phone:</span> ${customerPhone}</div>
-        <div class="info-row"><span class="label">Email:</span> ${customerEmail || 'N/A'}</div>
-        <div class="info-row"><span class="label">Address:</span> ${customerAddress}</div>
-      </div>
-      
-      <div class="section">
-        <div class="section-title">Order Items</div>
-        <table class="items-table">
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Color/Model</th>
-              <th>Price</th>
-              <th>Qty</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${selectedItems.map(item => `
-              <tr>
-                <td>${item.item_name}</td>
-                <td>${item.item_color} ${item.item_model}</td>
-                <td>$${parseFloat(item.price).toFixed(2)}</td>
-                <td>${item.quantity}</td>
-                <td>$${(parseFloat(item.price) * item.quantity).toFixed(2)}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-      
-      <div class="total-section">
-        <div class="section-title">Order Summary</div>
-        <div class="info-row"><span class="label">Total Items:</span> ${selectedItems.length}</div>
-        <div class="info-row"><span class="label">Order Date:</span> ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</div>
-        <div class="info-row" style="font-size: 16px; font-weight: bold; margin-top: 10px;">
-          <span class="label">TOTAL AMOUNT:</span> $${totalAmount.toFixed(2)}
-        </div>
-      </div>
-      
-      <div class="footer">
-        <p>Thank you for choosing iWoodFix-IT!</p>
-        <p>Please keep this ticket for your records.</p>
-      </div>
-      
-      <div class="no-print" style="margin-top: 20px; text-align: center;">
-        <button onclick="window.print()" style="padding: 10px 20px; font-size: 14px;">Print Both Copies</button>
-        <button onclick="window.close()" style="padding: 10px 20px; font-size: 14px; margin-left: 10px;">Close</button>
-      </div>
-    </body>
-    </html>
-    
-    <div style="page-break-before: always;"></div>
-    
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Order Ticket #${result.order_id} - Business Copy</title>
-      <style>
-        body { 
-          font-family: Arial, sans-serif; 
-          margin: 10px; 
-          line-height: 1.2;
-          font-size: 10px;
-        }
-        .header { 
+        .no-items { 
           text-align: center; 
-          border-bottom: 1px solid #333; 
-          padding-bottom: 5px; 
-          margin-bottom: 10px;
+          color: #666; 
+          font-style: italic; 
+          padding: 20px; 
         }
-        .company-name { 
-          font-size: 14px; 
-          font-weight: bold; 
-          margin-bottom: 2px;
-        }
-        .ticket-title { 
-          font-size: 12px; 
-          font-weight: bold; 
-          margin-bottom: 10px;
-        }
-        .copy-type {
-          text-align: center;
-          font-size: 10px;
-          font-weight: bold;
-          color: #dc3545;
-          margin-bottom: 8px;
-        }
-        .compact-section { 
-          margin-bottom: 8px; 
-          padding: 5px;
-          border: 1px solid #ccc;
-        }
-        .compact-title { 
-          font-weight: bold; 
-          font-size: 10px; 
-          margin-bottom: 3px;
-          text-decoration: underline;
-        }
-        .compact-row { 
-          margin: 2px 0;
-          font-size: 9px; 
-        }
-        .compact-label { 
-          font-weight: bold; 
-          display: inline-block; 
-          width: 60px;
-        }
-        .items-compact {
-          font-size: 8px;
-          max-height: 60px;
-          overflow: hidden;
-        }
-        .total-compact {
-          background-color: #f0f0f0;
-          padding: 5px;
-          border: 1px solid #333;
-          text-align: center;
-          font-weight: bold;
-          margin-top: 8px;
-        }
-        @media print {
-          body { margin: 0; }
-          .no-print { display: none; }
+        @media print { 
+          body { margin: 0; } 
+          .order-section { page-break-inside: avoid; }
         }
       </style>
     </head>
     <body>
       <div class="header">
-        <div class="company-name">iWoodFix-IT</div>
+        <h1>iWoodFix-IT Detailed Order Report</h1>
+        <p>Generated on: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</p>
+        <p>Order Created Successfully</p>
       </div>
       
-      <div class="copy-type">BUSINESS COPY</div>
-      <div class="ticket-title">ORDER #${result.order_id}</div>
-      
-      <div class="compact-section">
-        <div class="compact-title">Customer</div>
-        <div class="compact-row"><span class="compact-label">Name:</span> ${customerName}</div>
-        <div class="compact-row"><span class="compact-label">Phone:</span> ${customerPhone}</div>
-      </div>
-      
-      <div class="compact-section">
-        <div class="compact-title">Order Items (${selectedItems.length} items)</div>
-        <div class="items-compact">
-          ${selectedItems.slice(0, 3).map(item => `
-            <div class="compact-row">${item.item_name} - ${item.quantity}x</div>
-          `).join('')}
-          ${selectedItems.length > 3 ? `<div class="compact-row">... +${selectedItems.length - 3} more items</div>` : ''}
+      <div class="order-section">
+        <div class="order-header">
+          Order #${order.order_id} - ${order.first_name} ${order.last_name}
         </div>
-        <div class="compact-row"><span class="compact-label">Date:</span> ${new Date().toLocaleDateString()}</div>
+        
+        <div class="order-info">
+          <div><strong>Customer Name:</strong> ${order.first_name} ${order.last_name}</div>
+          <div><strong>Phone:</strong> ${order.phone || 'N/A'}</div>
+          <div><strong>Email:</strong> ${order.email || 'N/A'}</div>
+          <div><strong>Order Date:</strong> ${new Date(order.order_date).toLocaleDateString()}</div>
+          <div><strong>Subtotal:</strong> $${order.subtotal.toFixed(2)}</div>
+          <div style="grid-column: 1 / -1;"><strong>Order Created Successfully!</strong></div>
+        </div>
+        
+        ${order.items && order.items.length > 0 ? `
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>Item Name</th>
+                <th>Color/Model</th>
+                <th>Unit Price</th>
+                <th>Quantity</th>
+                <th>Total Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${order.items.map(item => `
+                <tr>
+                  <td>${item.item_name}</td>
+                  <td>${item.item_color} ${item.item_model}</td>
+                  <td>$${parseFloat(item.price).toFixed(2)}</td>
+                  <td>${item.order_item_quantity}</td>
+                  <td>$${parseFloat(item.total_price).toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+            <tfoot>
+              <tr class="items-total">
+                <td colspan="4"><strong>Items Total:</strong></td>
+                <td><strong>$${order.items.reduce((sum, item) => sum + parseFloat(item.total_price), 0).toFixed(2)}</strong></td>
+              </tr>
+            </tfoot>
+          </table>
+        ` : '<div class="no-items">No items added to this order</div>'}
       </div>
       
-      <div class="total-compact">
-        TOTAL: $${totalAmount.toFixed(2)}
-      </div>
-      
-      <div style="margin-top: 10px; text-align: center; font-size: 8px;">
-        Created: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
-      </div>
+      <script>
+        window.onload = function() { 
+          window.print(); 
+          setTimeout(() => window.close(), 1000);
+        }
+      </script>
     </body>
     </html>
   `;
-
-  // Open print window with both copies
-  const printWindow = window.open('', '_blank');
-  printWindow.document.write(customerCopy);
-  printWindow.document.close();
   
-  // Auto-print after content loads
-  printWindow.onload = function() {
-    setTimeout(() => {
-      printWindow.print();
-    }, 250);
-  };
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(printContent);
+  printWindow.document.close();
 }
 
 // Initialize event listeners

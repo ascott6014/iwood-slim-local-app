@@ -281,7 +281,7 @@ async function createInstall() {
       endpoint = '/installs/create-customer-install';
     } else {
       installData.customer_id = selectedCustomer.customer_id;
-      endpoint = '/installs/create-install';
+      endpoint = '/create-install';
     }
 
     const response = await fetch(endpoint, {
@@ -370,55 +370,10 @@ function printInstallReview() {
   }
 }
 
-function createAnotherInstall() {
-  // Reset everything
-  selectedCustomer = null;
-  selectedItems = [];
-  
-  // Reset forms
-  document.getElementById('newCustomerForm').style.display = 'none';
-  document.getElementById('selectedCustomer').style.display = 'none';
-  document.getElementById('itemSelectionSection').style.display = 'none';
-  document.getElementById('installDetailsSection').style.display = 'none';
-  document.getElementById('successMessage').style.display = 'none';
-  document.querySelector('.container').style.display = 'block';
-  
-  // Clear form inputs
-  document.getElementById('customerSearch').value = '';
-  document.getElementById('firstName').value = '';
-  document.getElementById('lastName').value = '';
-  document.getElementById('address').value = '';
-  document.getElementById('city').value = '';
-  document.getElementById('state').value = '';
-  document.getElementById('zip').value = '';
-  document.getElementById('phone').value = '';
-  document.getElementById('email').value = '';
-  document.getElementById('installDescription').value = '';
-  document.getElementById('installEstimate').value = '';
-  document.getElementById('installDate').value = '';
-  document.getElementById('itemSearch').value = '';
-  document.getElementById('itemResults').value = '';
-  document.getElementById('itemQuantity').value = '1';
-  
-  // Update displays
-  updateItemsTable();
-  updateTotalCosts();
-  
-  updateCreateButton();
-}
-
 function showInstallSuccessWithSummary(result) {
   console.log('showInstallSuccessWithSummary called with:', result);
   
-  // Hide the install form sections individually instead of the entire container
-  const sections = document.querySelectorAll('.section');
-  sections.forEach((section, index) => {
-    // Hide all sections except the success message (which is the last one)
-    if (section.id !== 'successMessage') {
-      section.style.display = 'none';
-    }
-  });
-  
+  // Don't hide the form sections - just show the success message at the bottom
   const successSection = document.getElementById('successMessage');
   const detailsDiv = document.getElementById('installDetails');
   
@@ -485,59 +440,16 @@ function showInstallSuccessWithSummary(result) {
   }
   
   detailsDiv.innerHTML = `
-    <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-      <h2 style="color: #28a745; text-align: center; margin-bottom: 20px;">✅ Install Created Successfully!</h2>
-      
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-        <div>
-          <h3 style="color: #333; border-bottom: 2px solid #28a745; padding-bottom: 5px;">Install Information</h3>
-          <p><strong>Install ID:</strong> #${result.install_id}</p>
-          <p><strong>Description:</strong> ${installDescription}</p>
-          <p><strong>Scheduled Date:</strong> ${installDate.toLocaleDateString()}</p>
-          <p><strong>Status:</strong> <span style="background: #ffc107; padding: 2px 8px; border-radius: 4px; color: black;">Scheduled</span></p>
-        </div>
-        
-        <div>
-          <h3 style="color: #333; border-bottom: 2px solid #17a2b8; padding-bottom: 5px;">Customer Details</h3>
-          <p><strong>Name:</strong> ${customerInfo.name}</p>
-          <p><strong>Phone:</strong> ${customerInfo.phone}</p>
-          <p><strong>Email:</strong> ${customerInfo.email}</p>
-          <p><strong>Address:</strong> ${customerInfo.address}</p>
-        </div>
-      </div>
-      
-      ${itemsHTML}
-      
-      <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin-top: 20px;">
-        <h3 style="color: #333; margin-bottom: 10px;">Cost Breakdown:</h3>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-          <span>Labor Cost:</span>
-          <span><strong>$${installEstimate.toFixed(2)}</strong></span>
-        </div>
-        ${selectedItems.length > 0 ? `
-          <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-            <span>Items Total:</span>
-            <span><strong>$${itemsTotal.toFixed(2)}</strong></span>
-          </div>
-        ` : ''}
-        <hr style="margin: 10px 0;">
-        <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; color: #28a745;">
-          <span>Total Install Cost:</span>
-          <span>$${totalCost.toFixed(2)}</span>
-        </div>
-      </div>
-      
-      <div style="text-align: center; margin-top: 30px;">
-        <button onclick="printInstallSummary()" style="background-color: #17a2b8; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; margin-right: 10px; font-size: 16px;">
-          🖨️ Print Install Summary
-        </button>
-        <button onclick="createAnotherInstall()" style="background-color: #28a745; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; margin-right: 10px; font-size: 16px;">
-          ➕ Create Another Install
-        </button>
-        <a href="install-summary.html" style="background-color: #6c757d; color: white; text-decoration: none; padding: 12px 24px; border-radius: 5px; font-size: 16px;">
-          📋 View All Installs
-        </a>
-      </div>
+    <p><strong>Install ID:</strong> ${result.install_id}</p>
+    <p><strong>Customer:</strong> ${customerInfo.name}</p>
+    <p><strong>Total Items:</strong> ${selectedItems.length}</p>
+    <p><strong>Total Amount:</strong> $${totalCost.toFixed(2)}</p>
+    <div style="margin-top: 20px;">
+      <button type="button" onclick="printInstallTicket({install_id: ${result.install_id}})" class="submit-button" style="background-color: #28a745; margin-right: 10px;">
+        Print Install Ticket
+      </button>
+      <br><br>
+      <button type="button" onclick="location.href='index.html'">← Back to Home</button>
     </div>
   `;
   
@@ -642,6 +554,11 @@ function showInstallSuccess(result) {
 }
 
 function printInstallTicket(result) {
+  // Use the new enhanced print function
+  printInstallWithItems(result);
+}
+
+async function printInstallWithItems(result) {
   // Get current data
   const customerName = selectedCustomer === 'new' ? 
     `${document.getElementById('firstName').value} ${document.getElementById('lastName').value}` : 
@@ -655,246 +572,160 @@ function printInstallTicket(result) {
     document.getElementById('email').value : 
     selectedCustomer.email;
 
-  const customerAddress = selectedCustomer === 'new' ? 
-    `${document.getElementById('address').value}, ${document.getElementById('city').value}, ${document.getElementById('state').value} ${document.getElementById('zip').value}` : 
-    `${selectedCustomer.address}, ${selectedCustomer.city}, ${selectedCustomer.state} ${selectedCustomer.zip}`;
-
   const installDescription = document.getElementById('installDescription').value;
-  const installEstimate = parseFloat(document.getElementById('installEstimate').value);
-  const installDate = new Date(document.getElementById('installDate').value);
+  const installEstimate = parseFloat(document.getElementById('installEstimate').value) || 0;
+  const installDateValue = document.getElementById('installDate').value;
+  const installDate = installDateValue ? new Date(installDateValue) : new Date();
 
-  // Create customer copy (full detailed version)
-  const customerCopy = `
+  // Fetch install items
+  let items = [];
+  try {
+    const response = await fetch(`/installs/${result.install_id}/items`);
+    items = await response.json();
+  } catch (error) {
+    console.error('Error loading install items:', error);
+  }
+
+  const install = {
+    install_id: result.install_id,
+    first_name: customerName.split(' ')[0],
+    last_name: customerName.split(' ').slice(1).join(' '),
+    phone: customerPhone,
+    email: customerEmail,
+    description: installDescription,
+    install_date: !isNaN(installDate.getTime()) ? installDate.toISOString() : new Date().toISOString(),
+    estimate: installEstimate,
+    install_items_total: items.reduce((sum, item) => sum + parseFloat(item.total_price || 0), 0),
+    subtotal: installEstimate + items.reduce((sum, item) => sum + parseFloat(item.total_price || 0), 0),
+    notes: document.getElementById('installNotes')?.value || '',
+    items: items
+  };
+
+  const printContent = `
     <!DOCTYPE html>
     <html>
     <head>
-      <title>Install Ticket #${result.install_id} - Customer Copy</title>
+      <title>Install Report - ${new Date().toLocaleDateString()}</title>
       <style>
-        body { 
-          font-family: Arial, sans-serif; 
-          margin: 20px; 
-          line-height: 1.4;
-          font-size: 12px;
-        }
-        .header { 
-          text-align: center; 
-          border-bottom: 2px solid #333; 
-          padding-bottom: 10px; 
-          margin-bottom: 20px;
-        }
-        .company-name { 
-          font-size: 18px; 
-          font-weight: bold; 
-          margin-bottom: 5px;
-        }
-        .ticket-title { 
-          font-size: 16px; 
-          font-weight: bold; 
-          margin-bottom: 20px;
-        }
-        .copy-type {
-          text-align: center;
-          font-size: 14px;
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .install-section { margin-bottom: 40px; page-break-inside: avoid; }
+        .install-header { 
+          background-color: #e9ecef; 
+          padding: 10px; 
+          margin-bottom: 15px; 
+          border: 2px solid #ddd;
           font-weight: bold;
-          color: #007bff;
-          margin-bottom: 15px;
+          font-size: 16px;
         }
-        .section { 
+        .install-info { 
+          display: grid; 
+          grid-template-columns: 1fr 1fr; 
+          gap: 10px; 
           margin-bottom: 15px; 
           padding: 10px;
-          border: 1px solid #ccc;
+          border: 1px solid #ddd;
         }
-        .section-title { 
+        .install-info div { margin: 5px 0; }
+        .items-table { 
+          width: 100%; 
+          border-collapse: collapse; 
+          margin-bottom: 15px; 
+        }
+        .items-table th, .items-table td { 
+          border: 1px solid #ddd; 
+          padding: 8px; 
+          text-align: left; 
+        }
+        .items-table th { 
+          background-color: #f5f5f5; 
           font-weight: bold; 
-          font-size: 14px; 
-          margin-bottom: 8px;
-          border-bottom: 1px solid #666;
-          padding-bottom: 3px;
         }
-        .info-row { 
-          margin: 5px 0; 
-        }
-        .label { 
+        .items-total { 
+          background-color: #f8f9fa; 
           font-weight: bold; 
-          display: inline-block; 
-          width: 120px;
         }
-        .total-section {
-          margin-top: 15px;
-          padding: 10px;
-          border: 2px solid #333;
-          background-color: #f9f9f9;
-        }
-        .footer {
-          margin-top: 30px;
-          border-top: 1px solid #333;
-          padding-top: 10px;
-          text-align: center;
-          font-size: 10px;
-        }
-        @media print {
-          body { margin: 0; }
-          .no-print { display: none; }
-        }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <div class="company-name">iWoodFix-IT</div>
-        <div>Professional Installation Services</div>
-      </div>
-      
-      <div class="copy-type">CUSTOMER COPY</div>
-      <div class="ticket-title">INSTALLATION TICKET #${result.install_id}</div>
-      
-      <div class="section">
-        <div class="section-title">Customer Information</div>
-        <div class="info-row"><span class="label">Name:</span> ${customerName}</div>
-        <div class="info-row"><span class="label">Phone:</span> ${customerPhone}</div>
-        <div class="info-row"><span class="label">Email:</span> ${customerEmail || 'N/A'}</div>
-        <div class="info-row"><span class="label">Address:</span> ${customerAddress}</div>
-      </div>
-      
-      <div class="section">
-        <div class="section-title">Installation Details</div>
-        <div class="info-row"><span class="label">Description:</span> ${installDescription}</div>
-        <div class="info-row"><span class="label">Scheduled Date:</span> ${installDate.toLocaleDateString()} ${installDate.toLocaleTimeString()}</div>
-        <div class="info-row"><span class="label">Created:</span> ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</div>
-      </div>
-      
-      <div class="total-section">
-        <div class="section-title">Cost Summary</div>
-        <div class="info-row" style="font-size: 16px; font-weight: bold; margin-top: 10px;">
-          <span class="label">TOTAL ESTIMATE:</span> $${installEstimate.toFixed(2)}
-        </div>
-      </div>
-      
-      <div class="footer">
-        <p>Thank you for choosing iWoodFix-IT!</p>
-        <p>This is an estimate. Final charges may vary based on actual work performed.</p>
-        <p>Please keep this ticket for your records.</p>
-      </div>
-      
-      <div class="no-print" style="margin-top: 20px; text-align: center;">
-        <button onclick="window.print()" style="padding: 10px 20px; font-size: 14px;">Print Both Copies</button>
-        <button onclick="window.close()" style="padding: 10px 20px; font-size: 14px; margin-left: 10px;">Close</button>
-      </div>
-    </body>
-    </html>
-    
-    <div style="page-break-before: always;"></div>
-    
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Install Ticket #${result.install_id} - Business Copy</title>
-      <style>
-        body { 
-          font-family: Arial, sans-serif; 
-          margin: 10px; 
-          line-height: 1.2;
-          font-size: 10px;
-        }
-        .header { 
+        .no-items { 
           text-align: center; 
-          border-bottom: 1px solid #333; 
-          padding-bottom: 5px; 
-          margin-bottom: 10px;
+          color: #666; 
+          font-style: italic; 
+          padding: 20px; 
         }
-        .company-name { 
-          font-size: 14px; 
-          font-weight: bold; 
-          margin-bottom: 2px;
-        }
-        .ticket-title { 
-          font-size: 12px; 
-          font-weight: bold; 
-          margin-bottom: 10px;
-        }
-        .copy-type {
-          text-align: center;
-          font-size: 10px;
-          font-weight: bold;
-          color: #dc3545;
-          margin-bottom: 8px;
-        }
-        .compact-section { 
-          margin-bottom: 8px; 
-          padding: 5px;
-          border: 1px solid #ccc;
-        }
-        .compact-title { 
-          font-weight: bold; 
-          font-size: 10px; 
-          margin-bottom: 3px;
-          text-decoration: underline;
-        }
-        .compact-row { 
-          margin: 2px 0;
-          font-size: 9px; 
-        }
-        .compact-label { 
-          font-weight: bold; 
-          display: inline-block; 
-          width: 60px;
-        }
-        .total-compact {
-          background-color: #f0f0f0;
-          padding: 5px;
-          border: 1px solid #333;
-          text-align: center;
-          font-weight: bold;
-          margin-top: 8px;
-        }
-        @media print {
-          body { margin: 0; }
-          .no-print { display: none; }
+        @media print { 
+          body { margin: 0; } 
+          .install-section { page-break-inside: avoid; }
         }
       </style>
     </head>
     <body>
       <div class="header">
-        <div class="company-name">iWoodFix-IT</div>
+        <h1>iWoodFix-IT Detailed Install Report</h1>
+        <p>Generated on: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}</p>
+        <p>Install Created Successfully</p>
       </div>
       
-      <div class="copy-type">BUSINESS COPY</div>
-      <div class="ticket-title">INSTALL #${result.install_id}</div>
-      
-      <div class="compact-section">
-        <div class="compact-title">Customer</div>
-        <div class="compact-row"><span class="compact-label">Name:</span> ${customerName}</div>
-        <div class="compact-row"><span class="compact-label">Phone:</span> ${customerPhone}</div>
+      <div class="install-section">
+        <div class="install-header">
+          Install #${install.install_id} - ${install.first_name} ${install.last_name}
+        </div>
+        
+        <div class="install-info">
+          <div><strong>Customer Name:</strong> ${install.first_name} ${install.last_name}</div>
+          <div><strong>Phone:</strong> ${install.phone || 'N/A'}</div>
+          <div><strong>Email:</strong> ${install.email || 'N/A'}</div>
+          <div><strong>Install Date:</strong> ${new Date(install.install_date).toLocaleDateString()}</div>
+          <div><strong>Description:</strong> ${install.description || 'N/A'}</div>
+          <div><strong>Estimate:</strong> $${install.estimate.toFixed(2)}</div>
+          <div><strong>Item Total:</strong> $${install.install_items_total.toFixed(2)}</div>
+          <div><strong>Subtotal:</strong> $${install.subtotal.toFixed(2)}</div>
+          <div style="grid-column: 1 / -1;"><strong>Notes:</strong> ${install.notes || 'N/A'}</div>
+        </div>
+        
+        ${install.items && install.items.length > 0 ? `
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>Item Name</th>
+                <th>Color/Model</th>
+                <th>Unit Price</th>
+                <th>Quantity</th>
+                <th>Total Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${install.items.map(item => `
+                <tr>
+                  <td>${item.item_name}</td>
+                  <td>${item.item_color} ${item.item_model}</td>
+                  <td>$${parseFloat(item.price).toFixed(2)}</td>
+                  <td>${item.install_item_quantity}</td>
+                  <td>$${parseFloat(item.total_price).toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+            <tfoot>
+              <tr class="items-total">
+                <td colspan="4"><strong>Items Total:</strong></td>
+                <td><strong>$${install.items.reduce((sum, item) => sum + parseFloat(item.total_price), 0).toFixed(2)}</strong></td>
+              </tr>
+            </tfoot>
+          </table>
+        ` : '<div class="no-items">No items added to this install</div>'}
       </div>
       
-      <div class="compact-section">
-        <div class="compact-title">Installation</div>
-        <div class="compact-row"><span class="compact-label">Work:</span> ${installDescription.length > 50 ? installDescription.substring(0, 50) + '...' : installDescription}</div>
-        <div class="compact-row"><span class="compact-label">Scheduled:</span> ${installDate.toLocaleDateString()}</div>
-        <div class="compact-row"><span class="compact-label">Created:</span> ${new Date().toLocaleDateString()}</div>
-      </div>
-      
-      <div class="total-compact">
-        ESTIMATE: $${installEstimate.toFixed(2)}
-      </div>
-      
-      <div style="margin-top: 10px; text-align: center; font-size: 8px;">
-        Created: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
-      </div>
+      <script>
+        window.onload = function() { 
+          window.print(); 
+          setTimeout(() => window.close(), 1000);
+        }
+      </script>
     </body>
     </html>
   `;
-
-  // Open print window with both copies
-  const printWindow = window.open('', '_blank');
-  printWindow.document.write(customerCopy);
-  printWindow.document.close();
   
-  // Auto-print after content loads
-  printWindow.onload = function() {
-    setTimeout(() => {
-      printWindow.print();
-    }, 250);
-  };
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(printContent);
+  printWindow.document.close();
 }
 
 // Initialize event listeners
@@ -918,7 +749,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('newCustomerBtn').addEventListener('click', showNewCustomerForm);
   document.getElementById('changeCustomerBtn').addEventListener('click', changeCustomer);
   document.getElementById('previewBtn').addEventListener('click', reviewInstall);
-  document.getElementById('createAnotherBtn').addEventListener('click', createAnotherInstall);
 
   // Hide customer results when clicking elsewhere
   document.addEventListener('click', (e) => {
