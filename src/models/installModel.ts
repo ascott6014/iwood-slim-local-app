@@ -80,3 +80,28 @@ export async function removeInstallItem(installItemId: number) {
   );
   return rows;
 }
+
+export async function getInstallById(installId: number) {
+  const [rows] = await db.query(`
+    SELECT i.*, c.first_name, c.last_name, c.email, c.phone, c.address, c.city, c.state, c.zip
+    FROM installs i
+    JOIN customers c ON i.customer_id = c.customer_id
+    WHERE i.install_id = ?
+  `, [installId]);
+  return (rows as any[])[0];
+}
+
+export async function updateInstall(installId: number, data: { install_date?: string; description?: string; estimate?: number; notes?: string }) {
+  const [result] = await db.query(
+    'CALL UpdateInstall(?, ?, ?, ?, ?)',
+    [
+      installId,
+      data.install_date || null,
+      data.description || null,
+      data.estimate || null,
+      data.notes || null
+    ]
+  );
+  
+  return result;
+}

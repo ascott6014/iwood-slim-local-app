@@ -2,7 +2,7 @@ import './config'; // Load environment variables
 import express, {Express} from 'express';
 import { handleCustomerAndRepair, handleRepairForCustomer, handleRepairPickup, handleRepairStatusUpdate, handleAddRepairItem, handleGetRepairItems } from './controllers/repairController';
 import { handleCreateCustomerOrder, handleCreateOrderForCustomer, handleCreateCompleteOrder, handleGetOrder, handleUpdateOrder } from './controllers/orderController';
-import { handleCreateCustomerInstall, handleCreateInstallForCustomer, handleGetInstallItemsById, handleAddInstallItem, handleUpdateInstallItem, handleRemoveInstallItem } from './controllers/installController';
+import { handleCreateCustomerInstall, handleCreateInstallForCustomer, handleGetInstallItemsById, handleAddInstallItem, handleUpdateInstallItem, handleRemoveInstallItem, handleGetInstall, handleUpdateInstall } from './controllers/installController';
 import { handleGetCustomers, handleAddCustomer, handleSearchCustomers, handleGetCustomersWithRecentVisits, handleUpdateCustomer, handleDeleteCustomer} from './controllers/customerController';
 import { handleGetInstallSummaries, handleGetOrderSummaries, handleGetRepairSummaries } from './controllers/summaryController';
 import { handleSearchItems, handleGetOrderItems, handleAddOrderItem, handleUpdateOrderItem, handleRemoveOrderItem, handleGetInstallItems, handleGetAllItems, handleGetItemById, handleCreateItem, handleUpdateItem, handleDeleteItem, handleGetSellableItems } from './controllers/itemController';
@@ -36,14 +36,23 @@ app.put('/api/orders/:id', handleUpdateOrder);
 app.post('/installs/create-customer-install', handleCreateCustomerInstall);
 app.post('/create-install', handleCreateInstallForCustomer);
 
+// Install API endpoints
+app.get('/api/installs/:id', handleGetInstall);
+app.put('/api/installs/:id', handleUpdateInstall);
+
 // Install item management routes
 app.get('/installs/:installId/items', handleGetInstallItemsById);
+app.get('/api/installs/:installId/items', handleGetInstallItemsById);
 app.post('/installs/add-item', handleAddInstallItem);
+app.post('/api/install-items', handleAddInstallItem);
 app.put('/installs/update-item', handleUpdateInstallItem);
+app.put('/api/install-items/:installItemId', handleUpdateInstallItem);
 app.delete('/installs/remove-item', handleRemoveInstallItem);
+app.delete('/api/install-items/:installItemId', handleRemoveInstallItem);
 
 // Route to get all items available for installs
 app.get('/items/install', handleGetInstallItems);
+app.get('/api/items/install', handleGetInstallItems);
 
 app.get('/api/customers', handleGetCustomers);
 app.get('/api/customers/search', handleSearchCustomers);

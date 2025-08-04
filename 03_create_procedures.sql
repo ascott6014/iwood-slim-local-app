@@ -281,4 +281,32 @@ BEGIN
     WHERE install_item_id = p_install_item_id;
 END//
 
+-- Update Install Information
+DROP PROCEDURE IF EXISTS UpdateInstall//
+CREATE PROCEDURE UpdateInstall (
+    IN p_install_id INT,
+    IN p_install_date DATE,
+    IN p_description TEXT,
+    IN p_estimate DECIMAL(10,2),
+    IN p_notes TEXT
+)
+BEGIN
+    DECLARE items_total DECIMAL(10,2);
+    
+    -- Get current items total for this install
+    SELECT COALESCE(SUM(total_price), 0) INTO items_total
+    FROM install_items
+    WHERE install_id = p_install_id;
+    
+    -- Update the install information and subtotal
+    UPDATE installs 
+    SET 
+        install_date = COALESCE(p_install_date, install_date),
+        description = COALESCE(p_description, description),
+        estimate = COALESCE(p_estimate, estimate),
+        notes = COALESCE(p_notes, notes),
+        subtotal = ROUND(COALESCE(p_estimate, estimate) + items_total, 2)
+    WHERE install_id = p_install_id;
+END//
+
 DELIMITER ;

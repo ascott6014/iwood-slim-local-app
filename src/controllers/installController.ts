@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { parseDatabaseError } from '../utils/db-utils';
-import { createCustomerAndInstall, createInstallForCustomer, getInstallItems, addInstallItem, updateInstallItem, removeInstallItem } from '../models/installModel';
+import { createCustomerAndInstall, createInstallForCustomer, getInstallItems, addInstallItem, updateInstallItem, removeInstallItem, getInstallById, updateInstall } from '../models/installModel';
 
 export async function handleCreateCustomerInstall(req: Request, res: Response) {
   try {
@@ -96,13 +96,15 @@ export async function handleAddInstallItem(req: Request, res: Response) {
 
 export async function handleUpdateInstallItem(req: Request, res: Response) {
   try {
-    const { install_item_id, quantity } = req.body;
+    // Check if install_item_id is in URL params or body (for backward compatibility)
+    const installItemId = req.params.installItemId ? parseInt(req.params.installItemId) : req.body.install_item_id;
+    const { quantity } = req.body;
     
-    if (!install_item_id || !quantity || quantity <= 0) {
+    if (!installItemId || !quantity || quantity <= 0) {
       return res.status(400).json({ message: 'Invalid input data' });
     }
     
-    const result = await updateInstallItem(install_item_id, quantity);
+    const result = await updateInstallItem(installItemId, quantity);
     return res.status(200).json({ message: 'Install item updated', result });
   } catch (error) {
     const databaseErrorMessage = parseDatabaseError(error);
@@ -113,17 +115,47 @@ export async function handleUpdateInstallItem(req: Request, res: Response) {
 
 export async function handleRemoveInstallItem(req: Request, res: Response) {
   try {
-    const { install_item_id } = req.body;
+    // Check if install_item_id is in URL params or body (for backward compatibility)
+    const installItemId = req.params.installItemId ? parseInt(req.params.installItemId) : req.body.install_item_id;
     
-    if (!install_item_id) {
+    if (!installItemId) {
       return res.status(400).json({ message: 'Install item ID is required' });
     }
     
-    const result = await removeInstallItem(install_item_id);
+    const result = await removeInstallItem(installItemId);
     return res.status(200).json({ message: 'Item removed from install', result });
   } catch (error) {
     const databaseErrorMessage = parseDatabaseError(error);
     console.log(error);
     return res.status(500).json({ message: 'Error removing item from install', databaseErrorMessage });
+  }
+}
+
+export async function handleGetInstall(req: Request, res: Response) {
+  try {
+    const installId = parseInt(req.params.id);
+    const install = await getInstallById(installId);
+    
+    if (!install) {
+      return res.status(404).json({ message: 'Install not found' });
+    }
+    
+    res.status(200).json(install);
+  } catch (error) {
+    console.error(error);
+    const databaseErrorMessage = parseDatabaseError(error);
+    res.status(500).json({ message: 'Error fetching install', databaseErrorMessage });
+  }
+}
+
+export async function handleUpdateInstall(req: Request, res: Response) {
+  try {
+    const installId = parseInt(req.params.id);
+    const result = await updateInstall(installId, req.body);
+    res.status(200).json({ message: 'Install updated successfully', result });
+  } catch (error) {
+    console.error(error);
+    const databaseErrorMessage = parseDatabaseError(error);
+    res.status(500).json({ message: 'Error updating install', databaseErrorMessage });
   }
 }

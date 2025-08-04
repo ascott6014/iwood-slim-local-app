@@ -401,7 +401,7 @@ function renderInstalls() {
         </button>
       </td>
       <td>
-        <button onclick="editInstall(${install.install_id})" class="summary-table button">Edit</button>
+        <button onclick="modifyInstall(${install.install_id})" class="summary-table button">Modify</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -414,6 +414,277 @@ function renderInstalls() {
 function editInstall(installId) {
   // Implementation for editing install
   window.location.href = `/manage-install.html?id=${installId}`;
+}
+
+// Modal functionality for comprehensive install editing
+async function modifyInstall(installId) {
+  try {
+    // Fetch install details
+    const installResponse = await fetch(`/api/installs/${installId}`);
+    if (!installResponse.ok) throw new Error('Failed to fetch install details');
+    const install = await installResponse.json();
+    
+    // Populate the modal with install data
+    populateInstallModal(install);
+    
+    // Load current install items
+    await loadCurrentInstallItems(installId);
+    
+    // Load available items for adding
+    await loadAvailableInstallItems();
+    
+    // Show the modal
+    document.getElementById('editInstallModal').style.display = 'block';
+    
+  } catch (error) {
+    console.error('Error loading install details:', error);
+    alert('Failed to load install details. Please try again.');
+  }
+}
+
+function populateInstallModal(install) {
+  document.getElementById('edit_install_id').value = install.install_id;
+  document.getElementById('edit_install_date').value = install.install_date ? install.install_date.split('T')[0] : '';
+  document.getElementById('edit_customer_name').value = `${install.first_name} ${install.last_name}`;
+  document.getElementById('edit_description').value = install.description || '';
+  document.getElementById('edit_estimate').value = install.estimate || '';
+  document.getElementById('edit_notes').value = install.notes || '';
+}
+
+async function loadCurrentInstallItems(installId) {
+  try {
+    const response = await fetch(`/api/installs/${installId}/items`);
+    if (!response.ok) throw new Error('Failed to fetch install items');
+    const items = await response.json();
+    
+    const tbody = document.getElementById('current_install_items');
+    tbody.innerHTML = '';
+    
+    let total = 0;
+    
+    items.forEach(item => {
+      const itemTotal = parseFloat(item.total_price);
+      total += itemTotal;
+      
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${item.item_name}</td>
+        <td>${item.item_color} ${item.item_model}</td>
+        <td>$${parseFloat(item.price).toFixed(2)}</td>
+        <td>
+          <input type="number" value="${item.install_item_quantity}" min="1" 
+                 onchange="updateInstallItemQuantity(${item.install_item_id}, this.value)" 
+                 style="width: 60px; text-align: center;">
+        </td>
+        <td>$${itemTotal.toFixed(2)}</td>
+        <td>
+          <button onclick="removeItemFromInstall(${item.install_item_id})" class="delete-btn" style="padding: 4px 8px; font-size: 12px;">Remove</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+    
+    document.getElementById('install_items_total').textContent = total.toFixed(2);
+    
+  } catch (error) {
+    console.error('Error loading install items:', error);
+    alert('Failed to load install items.');
+  }
+}
+
+async function loadAvailableInstallItems() {
+  try {
+    const response = await fetch('/api/items/install');
+    if (!response.ok) throw new Error('Failed to fetch available items');
+    const items = await response.json();
+    
+    const select = document.getElementById('available_install_items');
+    select.innerHTML = '<option value="">Select an item...</option>';
+    
+    items.forEach(item => {
+      const option = document.createElement('option');
+      option.value = item.item_id;
+      option.textContent = `${item.item_name} - ${item.item_color} ${item.item_model}`;
+      option.dataset.price = item.price;
+      option.dataset.quantity = item.quantity;
+      select.appendChild(option);
+    });
+    
+    // Store items for search functionality
+    window.availableInstallItems = items;
+    
+  } catch (error) {
+    console.error('Error loading available install items:', error);
+    alert('Failed to load available items.');
+  }
+}
+
+function searchAvailableInstallItems() {
+  const searchTerm = document.getElementById('install_item_search').value.toLowerCase();
+  const select = document.getElementById('available_install_items');
+  
+  if (!window.availableInstallItems) return;
+  
+  select.innerHTML = '<option value="">Select an item...</option>';
+  
+  const filteredItems = window.availableInstallItems.filter(item => 
+    item.item_name.toLowerCase().includes(searchTerm) ||
+    item.item_color.toLowerCase().includes(searchTerm) ||
+    item.item_model.toLowerCase().includes(searchTerm)
+  );
+  
+  filteredItems.forEach(item => {
+    const option = document.createElement('option');
+    option.value = item.item_id;
+    option.textContent = `${item.item_name} - ${item.item_color} ${item.item_model}`;
+    option.dataset.price = item.price;
+    option.dataset.quantity = item.quantity;
+    select.appendChild(option);
+  });
+}
+
+function populateInstallItemDetails() {
+  const select = document.getElementById('available_install_items');
+  const selectedOption = select.options[select.selectedIndex];
+  const detailsDiv = document.getElementById('install_item_details');
+  
+  if (selectedOption.value) {
+    document.getElementById('install_item_price').textContent = parseFloat(selectedOption.dataset.price).toFixed(2);
+    document.getElementById('install_item_available').textContent = selectedOption.dataset.quantity;
+    detailsDiv.style.display = 'block';
+  } else {
+    detailsDiv.style.display = 'none';
+  }
+}
+
+async function addItemToInstall() {
+  const installId = document.getElementById('edit_install_id').value;
+  const itemId = document.getElementById('available_install_items').value;
+  const quantity = parseInt(document.getElementById('install_item_quantity').value);
+  
+  if (!itemId || !quantity || quantity < 1) {
+    alert('Please select an item and enter a valid quantity.');
+    return;
+  }
+  
+  try {
+    const response = await fetch('/api/install-items', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        install_id: installId,
+        item_id: itemId,
+        quantity: quantity
+      })
+    });
+    
+    if (!response.ok) throw new Error('Failed to add item to install');
+    
+    // Reload the install items
+    await loadCurrentInstallItems(installId);
+    
+    // Reset the form
+    document.getElementById('available_install_items').value = '';
+    document.getElementById('install_item_quantity').value = '1';
+    document.getElementById('install_item_search').value = '';
+    document.getElementById('install_item_details').style.display = 'none';
+    
+    // Reload available items in case quantities changed
+    await loadAvailableInstallItems();
+    
+  } catch (error) {
+    console.error('Error adding item to install:', error);
+    alert('Failed to add item to install. Please try again.');
+  }
+}
+
+async function removeItemFromInstall(installItemId) {
+  if (!confirm('Are you sure you want to remove this item from the install?')) {
+    return;
+  }
+  
+  try {
+    const response = await fetch(`/api/install-items/${installItemId}`, {
+      method: 'DELETE'
+    });
+    
+    if (!response.ok) throw new Error('Failed to remove item from install');
+    
+    const installId = document.getElementById('edit_install_id').value;
+    await loadCurrentInstallItems(installId);
+    await loadAvailableInstallItems(); // Refresh in case quantities changed
+    
+  } catch (error) {
+    console.error('Error removing item from install:', error);
+    alert('Failed to remove item from install. Please try again.');
+  }
+}
+
+async function updateInstallItemQuantity(installItemId, newQuantity) {
+  if (newQuantity < 1) {
+    alert('Quantity must be at least 1.');
+    return;
+  }
+  
+  try {
+    const response = await fetch(`/api/install-items/${installItemId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quantity: newQuantity })
+    });
+    
+    if (!response.ok) throw new Error('Failed to update item quantity');
+    
+    const installId = document.getElementById('edit_install_id').value;
+    await loadCurrentInstallItems(installId);
+    await loadAvailableInstallItems(); // Refresh in case quantities changed
+    
+  } catch (error) {
+    console.error('Error updating item quantity:', error);
+    alert('Failed to update item quantity. Please try again.');
+  }
+}
+
+async function updateInstall() {
+  const installId = document.getElementById('edit_install_id').value;
+  const installDate = document.getElementById('edit_install_date').value;
+  const description = document.getElementById('edit_description').value;
+  const estimate = document.getElementById('edit_estimate').value;
+  const notes = document.getElementById('edit_notes').value;
+  
+  try {
+    const response = await fetch(`/api/installs/${installId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        install_date: installDate,
+        description: description,
+        estimate: parseFloat(estimate) || 0,
+        notes: notes
+      })
+    });
+    
+    if (!response.ok) throw new Error('Failed to update install');
+    
+    alert('Install updated successfully!');
+    closeEditInstallModal();
+    loadInstalls(); // Refresh the installs list
+    
+  } catch (error) {
+    console.error('Error updating install:', error);
+    alert('Failed to update install. Please try again.');
+  }
+}
+
+function closeEditInstallModal() {
+  document.getElementById('editInstallModal').style.display = 'none';
+  
+  // Reset form
+  document.getElementById('editInstallForm').reset();
+  document.getElementById('current_install_items').innerHTML = '';
+  document.getElementById('install_items_total').textContent = '0.00';
+  document.getElementById('available_install_items').innerHTML = '<option value="">Select an item...</option>';
+  document.getElementById('install_item_details').style.display = 'none';
 }
 
 async function fetchCustomers() {
