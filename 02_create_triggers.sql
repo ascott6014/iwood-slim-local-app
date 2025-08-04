@@ -448,3 +448,97 @@ BEGIN
 END$$
 
 DELIMITER ;
+
+-- ========================================
+-- INVENTORY MANAGEMENT TRIGGERS
+-- ========================================
+
+-- ORDER ITEM INVENTORY TRIGGERS
+DELIMITER $$
+CREATE TRIGGER trg_decrease_item_quantity_order_insert
+AFTER INSERT ON order_items
+FOR EACH ROW
+BEGIN
+    UPDATE items 
+    SET quantity = quantity - NEW.order_item_quantity 
+    WHERE item_id = NEW.item_id;
+END$$
+
+CREATE TRIGGER trg_adjust_item_quantity_order_update
+AFTER UPDATE ON order_items
+FOR EACH ROW
+BEGIN
+    -- Add back old quantity, subtract new quantity
+    UPDATE items 
+    SET quantity = quantity + OLD.order_item_quantity - NEW.order_item_quantity 
+    WHERE item_id = NEW.item_id;
+END$$
+
+CREATE TRIGGER trg_increase_item_quantity_order_delete
+AFTER DELETE ON order_items
+FOR EACH ROW
+BEGIN
+    UPDATE items 
+    SET quantity = quantity + OLD.order_item_quantity 
+    WHERE item_id = OLD.item_id;
+END$$
+
+-- REPAIR ITEM INVENTORY TRIGGERS
+CREATE TRIGGER trg_decrease_item_quantity_repair_insert
+AFTER INSERT ON repair_items
+FOR EACH ROW
+BEGIN
+    UPDATE items 
+    SET quantity = quantity - NEW.repair_item_quantity 
+    WHERE item_id = NEW.item_id;
+END$$
+
+CREATE TRIGGER trg_adjust_item_quantity_repair_update
+AFTER UPDATE ON repair_items
+FOR EACH ROW
+BEGIN
+    -- Add back old quantity, subtract new quantity
+    UPDATE items 
+    SET quantity = quantity + OLD.repair_item_quantity - NEW.repair_item_quantity 
+    WHERE item_id = NEW.item_id;
+END$$
+
+CREATE TRIGGER trg_increase_item_quantity_repair_delete
+AFTER DELETE ON repair_items
+FOR EACH ROW
+BEGIN
+    UPDATE items 
+    SET quantity = quantity + OLD.repair_item_quantity 
+    WHERE item_id = OLD.item_id;
+END$$
+
+-- INSTALL ITEM INVENTORY TRIGGERS
+CREATE TRIGGER trg_decrease_item_quantity_install_insert
+AFTER INSERT ON install_items
+FOR EACH ROW
+BEGIN
+    UPDATE items 
+    SET quantity = quantity - NEW.install_item_quantity 
+    WHERE item_id = NEW.item_id;
+END$$
+
+CREATE TRIGGER trg_adjust_item_quantity_install_update
+AFTER UPDATE ON install_items
+FOR EACH ROW
+BEGIN
+    -- Add back old quantity, subtract new quantity
+    UPDATE items 
+    SET quantity = quantity + OLD.install_item_quantity - NEW.install_item_quantity 
+    WHERE item_id = NEW.item_id;
+END$$
+
+CREATE TRIGGER trg_increase_item_quantity_install_delete
+AFTER DELETE ON install_items
+FOR EACH ROW
+BEGIN
+    UPDATE items 
+    SET quantity = quantity + OLD.install_item_quantity 
+    WHERE item_id = OLD.item_id;
+END$$
+
+DELIMITER ;

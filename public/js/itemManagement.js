@@ -1,5 +1,7 @@
 let allItems = [];
 let filteredItems = [];
+let currentUsageFilter = 'all';
+let currentSortFilter = 'name_asc';
 
 // Load all items when page loads
 document.addEventListener('DOMContentLoaded', function() {
@@ -8,6 +10,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Auto-calculate price in edit modal (for display only)
     document.getElementById('edit_cost').addEventListener('input', calculateEditPrice);
     document.getElementById('edit_markup_rate').addEventListener('input', calculateEditPrice);
+    
+    // Add search input event listener
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
 });
 
 async function loadItems() {
@@ -15,8 +20,7 @@ async function loadItems() {
         const response = await fetch('/api/items');
         if (response.ok) {
             allItems = await response.json();
-            filteredItems = [...allItems];
-            renderItems();
+            applyFilters();
             showMessage(`Loaded ${allItems.length} items successfully`, false);
         } else {
             showMessage('Error loading items', true);
@@ -25,6 +29,89 @@ async function loadItems() {
         console.error('Error loading items:', error);
         showMessage('Error loading items', true);
     }
+}
+
+function setUsageFilter(usage) {
+    // Update button states
+    document.querySelectorAll('[data-usage]').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`[data-usage="${usage}"]`).classList.add('active');
+    
+    currentUsageFilter = usage;
+    applyFilters();
+}
+
+function setSortFilter(sort) {
+    // Update button states
+    document.querySelectorAll('[data-sort]').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`[data-sort="${sort}"]`).classList.add('active');
+    
+    currentSortFilter = sort;
+    applyFilters();
+}
+
+function applyFilters() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+    
+    // Start with all items
+    let itemsToFilter = [...allItems];
+    
+    // Apply search filter
+    if (searchTerm !== '') {
+        itemsToFilter = itemsToFilter.filter(item => 
+            item.item_name.toLowerCase().includes(searchTerm) ||
+            (item.item_model && item.item_model.toLowerCase().includes(searchTerm)) ||
+            (item.description && item.description.toLowerCase().includes(searchTerm))
+        );
+    }
+    
+    // Apply usage filter
+    if (currentUsageFilter !== 'all') {
+        itemsToFilter = itemsToFilter.filter(item => {
+            switch(currentUsageFilter) {
+                case 'sell': return item.sell_item;
+                case 'repair': return item.repair_item;
+                case 'install': return item.install_item;
+                default: return true;
+            }
+        });
+    }
+    
+    // Apply sorting
+    itemsToFilter.sort((a, b) => {
+        switch(currentSortFilter) {
+            case 'name_asc':
+                return a.item_name.localeCompare(b.item_name);
+            case 'name_desc':
+                return b.item_name.localeCompare(a.item_name);
+            case 'price_asc':
+                return parseFloat(a.price) - parseFloat(b.price);
+            case 'price_desc':
+                return parseFloat(b.price) - parseFloat(a.price);
+            case 'quantity_asc':
+                return a.quantity - b.quantity;
+            case 'quantity_desc':
+                return b.quantity - a.quantity;
+            default:
+                return 0;
+        }
+    });
+    
+    filteredItems = itemsToFilter;
+    renderItems();
+}
+
+function clearSearch() {
+    document.getElementById('searchInput').value = '';
+    
+    // Reset all filters to default
+    document.querySelectorAll('[data-usage]').forEach(btn => btn.classList.remove('active'));
+    document.querySelector('[data-usage="all"]').classList.add('active');
+    document.querySelectorAll('[data-sort]').forEach(btn => btn.classList.remove('active'));
+    document.querySelector('[data-sort="name_asc"]').classList.add('active');
+    
+    currentUsageFilter = 'all';
+    currentSortFilter = 'name_asc';
+    applyFilters();
 }
 
 function renderItems() {
@@ -64,86 +151,6 @@ function renderItems() {
         
         tbody.appendChild(row);
     });
-}
-
-function searchItems() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-    
-    if (searchTerm === '') {
-        filteredItems = [...allItems];
-    } else {
-        filteredItems = allItems.filter(item => 
-            item.item_name.toLowerCase().includes(searchTerm) ||
-            (item.item_model && item.item_model.toLowerCase().includes(searchTerm)) ||
-            (item.description && item.description.toLowerCase().includes(searchTerm))
-        );
-    }
-    
-    // Apply current filter
-    filterItems();
-}
-
-function clearSearch() {
-    document.getElementById('searchInput').value = '';
-    document.getElementById('usageFilter').value = 'all';
-    document.getElementById('sortFilter').value = 'name_asc';
-    filteredItems = [...allItems];
-    renderItems();
-}
-
-function filterItems() {
-    const usageFilter = document.getElementById('usageFilter').value;
-    let itemsToFilter = [...allItems];
-    
-    // Apply search filter first
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
-    if (searchTerm !== '') {
-        itemsToFilter = itemsToFilter.filter(item => 
-            item.item_name.toLowerCase().includes(searchTerm) ||
-            (item.item_model && item.item_model.toLowerCase().includes(searchTerm)) ||
-            (item.description && item.description.toLowerCase().includes(searchTerm))
-        );
-    }
-    
-    // Apply usage filter
-    if (usageFilter !== 'all') {
-        itemsToFilter = itemsToFilter.filter(item => {
-            switch(usageFilter) {
-                case 'sell': return item.sell_item;
-                case 'repair': return item.repair_item;
-                case 'install': return item.install_item;
-                default: return true;
-            }
-        });
-    }
-    
-    filteredItems = itemsToFilter;
-    sortItems();
-}
-
-function sortItems() {
-    const sortBy = document.getElementById('sortFilter').value;
-    
-    filteredItems.sort((a, b) => {
-        switch(sortBy) {
-            case 'name_asc':
-                return a.item_name.localeCompare(b.item_name);
-            case 'name_desc':
-                return b.item_name.localeCompare(a.item_name);
-            case 'price_asc':
-                return parseFloat(a.price) - parseFloat(b.price);
-            case 'price_desc':
-                return parseFloat(b.price) - parseFloat(a.price);
-            case 'quantity_asc':
-                return a.quantity - b.quantity;
-            case 'quantity_desc':
-                return b.quantity - a.quantity;
-            default:
-                return 0;
-        }
-    });
-    
-    renderItems();
 }
 
 async function editItem(itemId) {
@@ -283,10 +290,3 @@ window.onclick = function(event) {
         closeEditModal();
     }
 }
-
-// Handle Enter key in search input
-document.getElementById('searchInput').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        searchItems();
-    }
-});
