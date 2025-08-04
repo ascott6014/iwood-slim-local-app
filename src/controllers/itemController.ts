@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { searchItems, getOrderItems, getInstallItems, getAllItems, createItem, updateItem, deleteItem, getItemById } from '../models/itemModel';
+import { searchItems, getOrderItems, getInstallItems, getAllItems, createItem, updateItem, deleteItem, getItemById, getSellableItems } from '../models/itemModel';
 import { addOrderItem, removeOrderItem, updateOrderItem } from '../models/orderModel';
 
 export async function handleSearchItems(req: Request, res: Response): Promise<void> {
@@ -103,6 +103,16 @@ export async function handleGetAllItems(req: Request, res: Response): Promise<vo
   } catch (error) {
     console.error('Error fetching all items:', error);
     res.status(500).json({ message: 'Unable to fetch items', error });
+  }
+}
+
+export async function handleGetSellableItems(req: Request, res: Response): Promise<void> {
+  try {
+    const items = await getSellableItems();
+    res.status(200).json(items);
+  } catch (error) {
+    console.error('Error in handleGetSellableItems:', error);
+    res.status(500).json({ message: 'Error fetching sellable items' });
   }
 }
 

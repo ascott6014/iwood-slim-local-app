@@ -103,3 +103,36 @@ export async function createCompleteOrder(data: NewOrderInput) {
   console.log('All items added, returning result');
   return { order_id: orderId, customer_id: (orderResult as any)[0][0].customer_id };
 }
+
+export async function getOrderById(orderId: number) {
+  const [rows] = await db.query(`
+    SELECT o.*, c.first_name, c.last_name, c.email, c.phone, c.address, c.city, c.state, c.zip
+    FROM orders o
+    JOIN customers c ON o.customer_id = c.customer_id
+    WHERE o.order_id = ?
+  `, [orderId]);
+  return (rows as any[])[0];
+}
+
+export async function updateOrder(orderId: number, data: { order_date?: string }) {
+  const updates = [];
+  const values = [];
+  
+  if (data.order_date !== undefined) {
+    updates.push('order_date = ?');
+    values.push(data.order_date);
+  }
+  
+  if (updates.length === 0) {
+    throw new Error('No valid fields to update');
+  }
+  
+  values.push(orderId);
+  
+  const [result] = await db.query(
+    `UPDATE orders SET ${updates.join(', ')} WHERE order_id = ?`,
+    values
+  );
+  
+  return result;
+}

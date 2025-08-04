@@ -15,6 +15,18 @@ export async function searchItems(query: string): Promise<Item[]> {
   return rows as Item[];
 }
 
+export async function getSellableItems(): Promise<Item[]> {
+  const [rows] = await db.query(
+    `SELECT item_id, item_name, item_color, item_model, description, cost, markup_rate, price, quantity, sell_item, repair_item, install_item
+     FROM items
+     WHERE sell_item = true
+       AND quantity > 0
+     ORDER BY item_name`,
+    []
+  );
+  return rows as Item[];
+}
+
 export async function getItemById(itemId: number): Promise<Item | null> {
   const [rows] = await db.query(
     `SELECT item_id, item_name, item_color, item_model, description, cost, markup_rate, price, quantity, sell_item, repair_item, install_item

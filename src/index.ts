@@ -1,11 +1,11 @@
 import './config'; // Load environment variables
 import express, {Express} from 'express';
 import { handleCustomerAndRepair, handleRepairForCustomer, handleRepairPickup, handleRepairStatusUpdate, handleAddRepairItem, handleGetRepairItems } from './controllers/repairController';
-import { handleCreateCustomerOrder, handleCreateOrderForCustomer, handleCreateCompleteOrder } from './controllers/orderController';
+import { handleCreateCustomerOrder, handleCreateOrderForCustomer, handleCreateCompleteOrder, handleGetOrder, handleUpdateOrder } from './controllers/orderController';
 import { handleCreateCustomerInstall, handleCreateInstallForCustomer, handleGetInstallItemsById, handleAddInstallItem, handleUpdateInstallItem, handleRemoveInstallItem } from './controllers/installController';
 import { handleGetCustomers, handleAddCustomer, handleSearchCustomers, handleGetCustomersWithRecentVisits, handleUpdateCustomer, handleDeleteCustomer} from './controllers/customerController';
 import { handleGetInstallSummaries, handleGetOrderSummaries, handleGetRepairSummaries } from './controllers/summaryController';
-import { handleSearchItems, handleGetOrderItems, handleAddOrderItem, handleUpdateOrderItem, handleRemoveOrderItem, handleGetInstallItems, handleGetAllItems, handleGetItemById, handleCreateItem, handleUpdateItem, handleDeleteItem } from './controllers/itemController';
+import { handleSearchItems, handleGetOrderItems, handleAddOrderItem, handleUpdateOrderItem, handleRemoveOrderItem, handleGetInstallItems, handleGetAllItems, handleGetItemById, handleCreateItem, handleUpdateItem, handleDeleteItem, handleGetSellableItems } from './controllers/itemController';
 
 
 
@@ -18,7 +18,7 @@ app.use(express.static('public', {extensions: ['html']}));
 app.use(express.json());
 
 
-// Endpoints
+// Endpointss
 app.post('/createCustomer', handleAddCustomer); 
 app.post('/repairs/create-customer-repair', handleCustomerAndRepair);
 app.post('/repairs/create-repair', handleRepairForCustomer ); 
@@ -29,6 +29,10 @@ app.get('/api/repairs/:repairId/items', handleGetRepairItems);
 app.post('/orders/create-customer-order', handleCreateCustomerOrder);
 app.post('/orders/create-order', handleCreateOrderForCustomer);
 app.post('/orders/create-complete-order', handleCreateCompleteOrder);
+
+// Order API endpoints
+app.get('/api/orders/:id', handleGetOrder);
+app.put('/api/orders/:id', handleUpdateOrder);
 app.post('/installs/create-customer-install', handleCreateCustomerInstall);
 app.post('/create-install', handleCreateInstallForCustomer);
 
@@ -49,6 +53,7 @@ app.delete('/api/customers/:id', handleDeleteCustomer);
 
 app.get('/api/items/search', handleSearchItems);
 app.get('/api/items', handleGetAllItems);
+app.get('/api/items/sell', handleGetSellableItems);
 app.get('/api/items/:itemId', handleGetItemById);
 app.post('/api/items', handleCreateItem);
 app.put('/api/items/:itemId', handleUpdateItem);
