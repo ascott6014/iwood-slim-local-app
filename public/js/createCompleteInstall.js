@@ -183,6 +183,17 @@ function removeItem(index) {
   updateTotalCosts();
 }
 
+function updateQuantity(index, newQuantity) {
+  const quantity = parseInt(newQuantity);
+  if (quantity <= 0) {
+    removeItem(index);
+  } else {
+    selectedItems[index].quantity = quantity;
+    updateItemsTable();
+    updateTotalCosts();
+  }
+}
+
 function updateItemsTable() {
   const tbody = document.getElementById('selectedItemsBody');
   const noItemsRow = document.getElementById('noItemsRow');
@@ -202,7 +213,11 @@ function updateItemsTable() {
         <td>${item.item_color}</td>
         <td>${item.item_model}</td>
         <td>$${price.toFixed(2)}</td>
-        <td>${item.quantity}</td>
+        <td>
+          <input type="number" value="${item.quantity}" min="1" 
+                 onchange="updateQuantity(${index}, this.value)"
+                 style="width: 60px;" />
+        </td>
         <td>$${total.toFixed(2)}</td>
         <td><button onclick="removeItem(${index})" class="remove-item-btn">Remove</button></td>
       </tr>
