@@ -191,6 +191,38 @@ BEGIN
     VALUES (p_repair_id, p_item_id, p_quantity, item_price * p_quantity);
 END//
 
+-- Remove Repair Item
+DROP PROCEDURE IF EXISTS RemoveRepairItem//
+CREATE PROCEDURE RemoveRepairItem (
+    IN p_repair_item_id INT
+)
+BEGIN
+    DELETE FROM repair_items WHERE repair_item_id = p_repair_item_id;
+END//
+
+-- Update Repair Item Quantity
+DROP PROCEDURE IF EXISTS UpdateRepairItem//
+CREATE PROCEDURE UpdateRepairItem (
+    IN p_repair_item_id INT,
+    IN p_new_quantity INT
+)
+BEGIN
+    DECLARE item_price DECIMAL(10,2);
+    
+    -- Get the unit price from the items table
+    SELECT (i.cost + (i.cost * i.markup_rate / 100)) INTO item_price
+    FROM repair_items ri
+    JOIN items i ON ri.item_id = i.item_id
+    WHERE ri.repair_item_id = p_repair_item_id;
+    
+    -- Update quantity and recalculate total price
+    UPDATE repair_items 
+    SET 
+        repair_item_quantity = p_new_quantity,
+        total_price = item_price * p_new_quantity
+    WHERE repair_item_id = p_repair_item_id;
+END//
+
 -- ========================================
 -- CUSTOMER AND INSTALL PROCEDURES
 -- ========================================
@@ -307,6 +339,40 @@ BEGIN
         notes = COALESCE(p_notes, notes),
         subtotal = ROUND(COALESCE(p_estimate, estimate) + items_total, 2)
     WHERE install_id = p_install_id;
+END//
+
+-- Update Repair Information
+DROP PROCEDURE IF EXISTS UpdateRepair//
+CREATE PROCEDURE UpdateRepair (
+    IN p_repair_id INT,
+    IN p_items_brought TEXT,
+    IN p_problem TEXT,
+    IN p_solution TEXT,
+    IN p_estimate DECIMAL(10,2),
+    IN p_status VARCHAR(50),
+    IN p_notes TEXT,
+    IN p_drop_off_date DATETIME
+)
+BEGIN
+    DECLARE items_total DECIMAL(10,2);
+    
+    -- Get current items total for this repair
+    SELECT COALESCE(SUM(total_price), 0) INTO items_total
+    FROM repair_items
+    WHERE repair_id = p_repair_id;
+    
+    -- Update the repair information and subtotal
+    UPDATE repairs 
+    SET 
+        items_brought = COALESCE(p_items_brought, items_brought),
+        problem = COALESCE(p_problem, problem),
+        solution = COALESCE(p_solution, solution),
+        estimate = COALESCE(p_estimate, estimate),
+        status = COALESCE(p_status, status),
+        notes = COALESCE(p_notes, notes),
+        drop_off_date = COALESCE(p_drop_off_date, drop_off_date),
+        subtotal = ROUND(COALESCE(p_estimate, estimate) + items_total, 2)
+    WHERE repair_id = p_repair_id;
 END//
 
 DELIMITER ;

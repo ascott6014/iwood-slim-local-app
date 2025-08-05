@@ -99,6 +99,135 @@
     </div>
   </div>
 
+  <!-- Edit Repair Modal -->
+  <div id="editRepairModal" class="modal" style="display: none;">
+    <div class="modal-content large-modal">
+      <div class="modal-header">
+        <h2>Modify Repair</h2>
+        <span class="close" onclick="closeEditRepairModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <form id="editRepairForm">
+          <input type="hidden" id="edit_repair_id" name="repair_id">
+          
+          <!-- Repair Information Section -->
+          <div class="form-section">
+            <h3>Repair Information</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="edit_items_brought">Items Brought:</label>
+                <textarea id="edit_items_brought" name="items_brought" rows="3"></textarea>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="edit_problem">Problem:</label>
+                <textarea id="edit_problem" name="problem" rows="3"></textarea>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="edit_solution">Solution:</label>
+                <textarea id="edit_solution" name="solution" rows="3"></textarea>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="edit_status">Status:</label>
+                <select id="edit_status" name="status">
+                  <option value="Not Started">Not Started</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Completed">Completed</option>
+                  <option value="On Hold">On Hold</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="edit_estimate">Estimate:</label>
+                <input type="number" id="edit_estimate" name="estimate" step="0.01" min="0">
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="edit_drop_off_date">Drop-off Date:</label>
+                <input type="datetime-local" id="edit_drop_off_date" name="drop_off_date">
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="edit_notes">Notes:</label>
+                <textarea id="edit_notes" name="notes" rows="3"></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Items Section -->
+          <div class="form-section">
+            <h3>Items</h3>
+            
+            <!-- Add Item Section -->
+            <div class="add-item-section">
+              <h4>Add Item</h4>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="edit_item_search">Search Items:</label>
+                  <input type="text" id="edit_item_search" placeholder="Start typing item name..." onkeyup="searchItemsForRepair(this.value)">
+                </div>
+                <div class="form-group">
+                  <label for="edit_item_results">Select Item:</label>
+                  <select id="edit_item_results">
+                    <option value="">Choose an item...</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="edit_item_quantity">Quantity:</label>
+                  <input type="number" id="edit_item_quantity" min="1" value="1">
+                </div>
+                <div class="form-group">
+                  <button type="button" onclick="addItemToRepair()" class="btn btn-secondary">Add Item</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Current Items List -->
+            <div class="current-items-section">
+              <h4>Current Items</h4>
+              <div class="items-table-container">
+                <table class="items-table">
+                  <thead>
+                    <tr>
+                      <th>Item Name</th>
+                      <th>Description</th>
+                      <th>Quantity</th>
+                      <th>Price</th>
+                      <th>Total</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="edit_repair_items_list">
+                    <!-- Items will be populated here -->
+                  </tbody>
+                </table>
+              </div>
+              <div class="items-total">
+                <strong>Items Total: $<span id="edit_repair_items_total">0.00</span></strong>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeEditRepairModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveRepairChanges()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Utility Scripts -->
   <script src="/js/utils/shared-utils.js"></script>
   <script src="/js/utils/print-utils.js"></script>

@@ -1,6 +1,6 @@
 import './config'; // Load environment variables
 import express, {Express} from 'express';
-import { handleCustomerAndRepair, handleRepairForCustomer, handleRepairPickup, handleRepairStatusUpdate, handleAddRepairItem, handleGetRepairItems } from './controllers/repairController';
+import { handleCustomerAndRepair, handleRepairForCustomer, handleRepairPickup, handleRepairStatusUpdate, handleAddRepairItem, handleGetRepairItems, handleGetRepair, handleUpdateRepair, handleUpdateRepairItem, handleRemoveRepairItem } from './controllers/repairController';
 import { handleCreateCustomerOrder, handleCreateOrderForCustomer, handleCreateCompleteOrder, handleGetOrder, handleUpdateOrder } from './controllers/orderController';
 import { handleCreateCustomerInstall, handleCreateInstallForCustomer, handleGetInstallItemsById, handleAddInstallItem, handleUpdateInstallItem, handleRemoveInstallItem, handleGetInstall, handleUpdateInstall } from './controllers/installController';
 import { handleGetCustomers, handleAddCustomer, handleSearchCustomers, handleGetCustomersWithRecentVisits, handleUpdateCustomer, handleDeleteCustomer} from './controllers/customerController';
@@ -25,7 +25,12 @@ app.post('/repairs/create-repair', handleRepairForCustomer );
 app.post('/repairs/:repairId/pickup', handleRepairPickup);
 app.post('/repairs/:repairId/status', handleRepairStatusUpdate);
 app.post('/repairs/add-item', handleAddRepairItem);
+app.post('/repairs/update-item', handleUpdateRepairItem);
+app.post('/repairs/remove-item', handleRemoveRepairItem);
 app.get('/api/repairs/:repairId/items', handleGetRepairItems);
+app.get('/api/repairs/:repairId', handleGetRepair);
+app.put('/api/repairs/:repairId', handleUpdateRepair);
+
 app.post('/orders/create-customer-order', handleCreateCustomerOrder);
 app.post('/orders/create-order', handleCreateOrderForCustomer);
 app.post('/orders/create-complete-order', handleCreateCompleteOrder);

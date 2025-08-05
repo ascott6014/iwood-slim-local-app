@@ -69,6 +69,7 @@ async function loadRepairs() {
         <td>${r.notes || 'N/A'}</td>
         <td><button onclick="toggleRepairItems(${r.repair_id}, this)" class="expand-btn">Expand</button></td>
         <td>
+          <button onclick="openEditRepairModal(${r.repair_id})">Modify</button>
           <button onclick="editRepair(${r.repair_id})">Change Status</button>
           ${actionButton}
         </td>
@@ -820,5 +821,279 @@ async function toggleRepairItems(repairId, button) {
     // Hide the breakdown
     itemsRow.style.display = 'none';
     button.textContent = 'Expand';
+  }
+}
+
+// ========================================
+// REPAIR MODAL FUNCTIONALITY
+// ========================================
+
+async function openEditRepairModal(repairId) {
+  try {
+    // Fetch repair details
+    const response = await fetch(`/api/repairs/${repairId}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch repair details');
+    }
+    
+    const repair = await response.json();
+    
+    // Populate form fields
+    document.getElementById('edit_repair_id').value = repair.repair_id;
+    document.getElementById('edit_items_brought').value = repair.items_brought || '';
+    document.getElementById('edit_problem').value = repair.problem || '';
+    document.getElementById('edit_solution').value = repair.solution || '';
+    document.getElementById('edit_status').value = repair.status || '';
+    document.getElementById('edit_estimate').value = repair.estimate || '';
+    document.getElementById('edit_notes').value = repair.notes || '';
+    
+    // Format drop-off date for datetime-local input
+    if (repair.drop_off_date) {
+      const date = new Date(repair.drop_off_date);
+      const formattedDate = date.toISOString().slice(0, 16);
+      document.getElementById('edit_drop_off_date').value = formattedDate;
+    }
+    
+    // Load repair items
+    await loadRepairItems(repairId);
+    
+    // Show modal
+    document.getElementById('editRepairModal').style.display = 'flex';
+    
+  } catch (error) {
+    console.error('Error opening repair modal:', error);
+    alert('Failed to load repair details. Please try again.');
+  }
+}
+
+function closeEditRepairModal() {
+  document.getElementById('editRepairModal').style.display = 'none';
+  // Clear form
+  document.getElementById('editRepairForm').reset();
+  document.getElementById('edit_repair_items_list').innerHTML = '';
+  document.getElementById('edit_repair_items_total').textContent = '0.00';
+  // Clear search fields
+  document.getElementById('edit_item_search').value = '';
+  document.getElementById('edit_item_results').innerHTML = '<option value="">Choose an item...</option>';
+}
+
+async function loadRepairItems(repairId) {
+  try {
+    const response = await fetch(`/api/repairs/${repairId}/items`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch repair items');
+    }
+    
+    const items = await response.json();
+    const tableBody = document.getElementById('edit_repair_items_list');
+    let total = 0;
+    
+    tableBody.innerHTML = '';
+    
+    items.forEach(item => {
+      const row = document.createElement('tr');
+      const itemTotal = parseFloat(item.total_price);
+      total += itemTotal;
+      
+      row.innerHTML = `
+        <td>${item.item_name}</td>
+        <td>${item.description || 'N/A'}</td>
+        <td>
+          <input type="number" value="${item.repair_item_quantity}" min="1" 
+                 onchange="updateRepairItemQuantity(${item.repair_item_id}, this.value)"
+                 style="width: 60px;">
+        </td>
+        <td>$${(itemTotal / item.repair_item_quantity).toFixed(2)}</td>
+        <td>$${itemTotal.toFixed(2)}</td>
+        <td>
+          <button type="button" onclick="removeRepairItem(${item.repair_item_id})" 
+                  class="btn btn-danger btn-sm">Remove</button>
+        </td>
+      `;
+      
+      tableBody.appendChild(row);
+    });
+    
+    document.getElementById('edit_repair_items_total').textContent = total.toFixed(2);
+    
+  } catch (error) {
+    console.error('Error loading repair items:', error);
+    document.getElementById('edit_repair_items_list').innerHTML = 
+      '<tr><td colspan="6">Error loading items</td></tr>';
+  }
+}
+
+async function searchItemsForRepair(query) {
+  if (query.length < 2) {
+    document.getElementById('edit_item_results').innerHTML = '<option value="">Choose an item...</option>';
+    return;
+  }
+  
+  try {
+    const response = await fetch(`/api/items/search?q=${encodeURIComponent(query)}`);
+    if (!response.ok) {
+      throw new Error('Failed to search items');
+    }
+    
+    const items = await response.json();
+    const select = document.getElementById('edit_item_results');
+    
+    select.innerHTML = '<option value="">Choose an item...</option>';
+    
+    items.forEach(item => {
+      const option = document.createElement('option');
+      option.value = item.item_id;
+      option.textContent = `${item.item_name} - ${item.description || ''} ($${parseFloat(item.price).toFixed(2)})`;
+      select.appendChild(option);
+    });
+    
+  } catch (error) {
+    console.error('Error searching items:', error);
+  }
+}
+
+async function addItemToRepair() {
+  const repairId = document.getElementById('edit_repair_id').value;
+  const itemId = document.getElementById('edit_item_results').value;
+  const quantity = parseInt(document.getElementById('edit_item_quantity').value);
+  
+  if (!itemId || !quantity || quantity < 1) {
+    alert('Please select an item and enter a valid quantity.');
+    return;
+  }
+  
+  try {
+    const response = await fetch('/repairs/add-item', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        repair_id: parseInt(repairId),
+        item_id: parseInt(itemId),
+        quantity: quantity
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to add item to repair');
+    }
+    
+    // Reload items and clear form
+    await loadRepairItems(repairId);
+    document.getElementById('edit_item_search').value = '';
+    document.getElementById('edit_item_results').innerHTML = '<option value="">Choose an item...</option>';
+    document.getElementById('edit_item_quantity').value = '1';
+    
+  } catch (error) {
+    console.error('Error adding item to repair:', error);
+    alert('Failed to add item to repair. Please try again.');
+  }
+}
+
+async function updateRepairItemQuantity(repairItemId, newQuantity) {
+  if (newQuantity < 1) {
+    alert('Quantity must be at least 1');
+    return;
+  }
+  
+  try {
+    const response = await fetch('/repairs/update-item', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        repair_item_id: repairItemId,
+        new_quantity: parseInt(newQuantity)
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to update item quantity');
+    }
+    
+    // Reload items to refresh totals
+    const repairId = document.getElementById('edit_repair_id').value;
+    await loadRepairItems(repairId);
+    
+  } catch (error) {
+    console.error('Error updating item quantity:', error);
+    alert('Failed to update item quantity. Please try again.');
+  }
+}
+
+async function removeRepairItem(repairItemId) {
+  if (!confirm('Are you sure you want to remove this item?')) {
+    return;
+  }
+  
+  try {
+    const response = await fetch('/repairs/remove-item', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        repair_item_id: repairItemId
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to remove item');
+    }
+    
+    // Reload items
+    const repairId = document.getElementById('edit_repair_id').value;
+    await loadRepairItems(repairId);
+    
+  } catch (error) {
+    console.error('Error removing item:', error);
+    alert('Failed to remove item. Please try again.');
+  }
+}
+
+async function saveRepairChanges() {
+  const form = document.getElementById('editRepairForm');
+  const formData = new FormData(form);
+  
+  // Convert FormData to regular object
+  const repairData = {};
+  for (let [key, value] of formData.entries()) {
+    if (value.trim() !== '') {
+      repairData[key] = value;
+    }
+  }
+  
+  // Convert drop_off_date to proper format if provided
+  if (repairData.drop_off_date) {
+    repairData.drop_off_date = new Date(repairData.drop_off_date).toISOString();
+  }
+  
+  const repairId = repairData.repair_id;
+  delete repairData.repair_id; // Remove from update data
+  
+  try {
+    const response = await fetch(`/api/repairs/${repairId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(repairData)
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to update repair');
+    }
+    
+    alert('Repair updated successfully!');
+    closeEditRepairModal();
+    
+    // Reload the repair list to show updated data
+    await loadRepairs();
+    
+  } catch (error) {
+    console.error('Error updating repair:', error);
+    alert('Failed to update repair. Please try again.');
   }
 }

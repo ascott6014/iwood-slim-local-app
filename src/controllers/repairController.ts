@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { parseDatabaseError } from '../utils/db-utils';
-import { createCustomerAndRepair, createRepairForCustomer, updateRepairPickupDate, updateRepairStatus, addRepairItem, getRepairItems } from '../models/repairModel';
+import { createCustomerAndRepair, createRepairForCustomer, updateRepairPickupDate, updateRepairStatus, addRepairItem, getRepairItems, getRepairById, updateRepair, updateRepairItemQuantity, removeRepairItem } from '../models/repairModel';
 
 
 export async function handleCustomerAndRepair(req: Request, res: Response) {
@@ -100,5 +100,68 @@ export async function handleGetRepairItems(req: Request, res: Response) {
     console.error(error);
     const databaseErrorMessage = parseDatabaseError(error);
     res.status(500).json({ message: 'Error fetching repair items', databaseErrorMessage });
+  }
+}
+
+export async function handleGetRepair(req: Request, res: Response) {
+  try {
+    const { repairId } = req.params;
+    const repairs = await getRepairById(parseInt(repairId));
+    
+    if (!repairs || (repairs as any[]).length === 0) {
+      return res.status(404).json({ message: 'Repair not found' });
+    }
+    
+    return res.status(200).json((repairs as any[])[0]);
+  } catch (error) {
+    console.error(error);
+    const databaseErrorMessage = parseDatabaseError(error);
+    return res.status(500).json({ message: 'Error fetching repair', databaseErrorMessage });
+  }
+}
+
+export async function handleUpdateRepair(req: Request, res: Response) {
+  try {
+    const { repairId } = req.params;
+    const result = await updateRepair(parseInt(repairId), req.body);
+    return res.status(200).json({ message: 'Repair updated successfully', result });
+  } catch (error) {
+    console.error(error);
+    const databaseErrorMessage = parseDatabaseError(error);
+    return res.status(500).json({ message: 'Error updating repair', databaseErrorMessage });
+  }
+}
+
+export async function handleUpdateRepairItem(req: Request, res: Response) {
+  try {
+    const { repair_item_id, new_quantity } = req.body;
+    
+    if (!repair_item_id || !new_quantity) {
+      return res.status(400).json({ message: 'repair_item_id and new_quantity are required' });
+    }
+    
+    const result = await updateRepairItemQuantity(repair_item_id, new_quantity);
+    return res.status(200).json({ message: 'Repair item quantity updated successfully', result });
+  } catch (error) {
+    console.error(error);
+    const databaseErrorMessage = parseDatabaseError(error);
+    return res.status(500).json({ message: 'Error updating repair item quantity', databaseErrorMessage });
+  }
+}
+
+export async function handleRemoveRepairItem(req: Request, res: Response) {
+  try {
+    const { repair_item_id } = req.body;
+    
+    if (!repair_item_id) {
+      return res.status(400).json({ message: 'repair_item_id is required' });
+    }
+    
+    const result = await removeRepairItem(repair_item_id);
+    return res.status(200).json({ message: 'Repair item removed successfully', result });
+  } catch (error) {
+    console.error(error);
+    const databaseErrorMessage = parseDatabaseError(error);
+    return res.status(500).json({ message: 'Error removing repair item', databaseErrorMessage });
   }
 }

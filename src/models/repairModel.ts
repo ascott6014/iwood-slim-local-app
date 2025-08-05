@@ -95,4 +95,64 @@ async function getRepairItems(repairId: number) {
   return rows;
 }
 
-export {createCustomerAndRepair, createRepairForCustomer, updateRepairPickupDate, updateRepairStatus, addRepairItem, getRepairItems}
+async function getRepairById(repairId: number) {
+  const [rows] = await db.query(
+    `SELECT 
+      r.repair_id,
+      r.customer_id,
+      r.items_brought,
+      r.problem,
+      r.solution,
+      r.estimate,
+      r.status,
+      r.notes,
+      r.drop_off_date,
+      r.pickup_date
+    FROM repairs r
+    WHERE r.repair_id = ?`,
+    [repairId]
+  );
+  return rows;
+}
+
+async function updateRepair(repairId: number, data: any) {
+  // Format drop_off_date if provided
+  let dropOffDate = null;
+  if (data.drop_off_date) {
+    const date = new Date(data.drop_off_date);
+    dropOffDate = date.toISOString().slice(0, 19).replace('T', ' '); // Convert to 'YYYY-MM-DD HH:MM:SS'
+  }
+  
+  const [result] = await db.query(
+    'CALL UpdateRepair(?, ?, ?, ?, ?, ?, ?, ?)',
+    [
+      repairId,
+      data.items_brought || null,
+      data.problem || null,
+      data.solution || null,
+      data.estimate ? parseFloat(data.estimate) : null,
+      data.status || null,
+      data.notes || null,
+      dropOffDate
+    ]
+  );
+  return result;
+}
+
+async function updateRepairItemQuantity(repairItemId: number, newQuantity: number) {
+  const [rows] = await db.query(
+    'CALL UpdateRepairItem(?, ?)',
+    [repairItemId, newQuantity]
+  );
+  return rows;
+}
+
+async function removeRepairItem(repairItemId: number) {
+  const [rows] = await db.query(
+    'CALL RemoveRepairItem(?)',
+    [repairItemId]
+  );
+  return rows;
+}
+
+export {createCustomerAndRepair, createRepairForCustomer, updateRepairPickupDate, updateRepairStatus, addRepairItem, getRepairItems, getRepairById, updateRepair, updateRepairItemQuantity, removeRepairItem}
