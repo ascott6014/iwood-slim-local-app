@@ -84,6 +84,70 @@
 
   </div>
 
+  <!-- Customer Edit Modal -->
+  <div id="editCustomerModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Edit Customer</h3>
+        <span class="close" onclick="closeEditCustomerModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <form id="editCustomerForm">
+          <input type="hidden" id="editCustomerId" name="customer_id">
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="editFirstName">First Name *</label>
+              <input type="text" id="editFirstName" name="first_name" required>
+            </div>
+            <div class="form-group">
+              <label for="editLastName">Last Name *</label>
+              <input type="text" id="editLastName" name="last_name" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="editPhone">Phone *</label>
+              <input type="tel" id="editPhone" name="phone" required>
+            </div>
+            <div class="form-group">
+              <label for="editEmail">Email</label>
+              <input type="email" id="editEmail" name="email">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="editAddress">Address</label>
+              <input type="text" id="editAddress" name="address">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="editCity">City</label>
+              <input type="text" id="editCity" name="city">
+            </div>
+            <div class="form-group">
+              <label for="editState">State</label>
+              <input type="text" id="editState" name="state">
+            </div>
+            <div class="form-group">
+              <label for="editZip">ZIP Code</label>
+              <input type="text" id="editZip" name="zip">
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" onclick="closeEditCustomerModal()" class="cancel-btn">Cancel</button>
+            <button type="submit" class="save-btn">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
   <script>
     let allCustomers = [];
     let filteredCustomers = [];
@@ -114,6 +178,49 @@
           this.classList.add('active');
           filterAndSortCustomers();
         });
+      });
+
+      // Add form submission handler for customer edit
+      document.getElementById('editCustomerForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const customerId = formData.get('customer_id');
+        
+        // Prepare update data
+        const updateData = {
+          first_name: formData.get('first_name').trim(),
+          last_name: formData.get('last_name').trim(),
+          phone: formData.get('phone').trim(),
+          email: formData.get('email').trim() || null,
+          address: formData.get('address').trim() || null,
+          city: formData.get('city').trim() || null,
+          state: formData.get('state').trim() || null,
+          zip: formData.get('zip').trim() || null
+        };
+
+        try {
+          const response = await fetch(`/api/customers/${customerId}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updateData)
+          });
+
+          const result = await response.json();
+          
+          if (response.ok) {
+            alert('Customer updated successfully!');
+            closeEditCustomerModal();
+            loadCustomers(); // Reload the customer list
+          } else {
+            alert('Error updating customer: ' + (result.error || result.message || 'Unknown error'));
+          }
+        } catch (error) {
+          console.error('Error updating customer:', error);
+          alert('Error updating customer. Please try again.');
+        }
       });
     });
 
@@ -254,72 +361,41 @@
     }
 
     function modifyCustomer(customerId) {
-      // Find the customer data
-      const customer = allCustomers.find(c => c.customer_id === customerId);
-      if (!customer) {
-        alert('Customer not found');
-        return;
-      }
+      openEditCustomerModal(customerId);
+    }
 
-      // Create a simple form for editing customer information
-      const newFirstName = prompt('First Name:', customer.first_name);
-      if (newFirstName === null) return; // User cancelled
-
-      const newLastName = prompt('Last Name:', customer.last_name);
-      if (newLastName === null) return;
-
-      const newPhone = prompt('Phone:', customer.phone);
-      if (newPhone === null) return;
-
-      const newEmail = prompt('Email:', customer.email || '');
-      if (newEmail === null) return;
-
-      const newAddress = prompt('Address:', customer.address || '');
-      if (newAddress === null) return;
-
-      const newCity = prompt('City:', customer.city || '');
-      if (newCity === null) return;
-
-      const newState = prompt('State:', customer.state || '');
-      if (newState === null) return;
-
-      const newZip = prompt('ZIP:', customer.zip || '');
-      if (newZip === null) return;
-
-      // Prepare update data
-      const updateData = {
-        first_name: newFirstName.trim(),
-        last_name: newLastName.trim(),
-        phone: newPhone.trim(),
-        email: newEmail.trim() || null,
-        address: newAddress.trim() || null,
-        city: newCity.trim() || null,
-        state: newState.trim() || null,
-        zip: newZip.trim() || null
-      };
-
-      // Send update request to server
-      fetch(`/api/customers/${customerId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(updateData)
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.message && data.message.includes('updated')) {
-          alert('Customer updated successfully!');
-          // Reload the customer list
-          loadCustomers();
-        } else {
-          alert('Error updating customer: ' + (data.error || data.message || 'Unknown error'));
+    async function openEditCustomerModal(customerId) {
+      try {
+        // Fetch the latest customer data from the server
+        const response = await fetch(`/api/customers/${customerId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch customer data');
         }
-      })
-      .catch(error => {
-        console.error('Error updating customer:', error);
-        alert('Error updating customer. Please try again.');
-      });
+        
+        const customer = await response.json();
+        
+        // Populate the form with current customer data
+        document.getElementById('editCustomerId').value = customer.customer_id;
+        document.getElementById('editFirstName').value = customer.first_name || '';
+        document.getElementById('editLastName').value = customer.last_name || '';
+        document.getElementById('editPhone').value = customer.phone || '';
+        document.getElementById('editEmail').value = customer.email || '';
+        document.getElementById('editAddress').value = customer.address || '';
+        document.getElementById('editCity').value = customer.city || '';
+        document.getElementById('editState').value = customer.state || '';
+        document.getElementById('editZip').value = customer.zip || '';
+        
+        // Show the modal
+        document.getElementById('editCustomerModal').style.display = 'block';
+      } catch (error) {
+        console.error('Error loading customer data:', error);
+        alert('Error loading customer data. Please try again.');
+      }
+    }
+
+    function closeEditCustomerModal() {
+      document.getElementById('editCustomerModal').style.display = 'none';
+      document.getElementById('editCustomerForm').reset();
     }
 
     function deleteCustomer(customerId) {
@@ -381,6 +457,130 @@
 
     .modify-customer-btn:hover {
       background-color: #e67e00 !important;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 5% auto;
+      padding: 0;
+      border: 1px solid #888;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-header {
+      background-color: #f8f9fa;
+      padding: 15px 20px;
+      border-bottom: 1px solid #dee2e6;
+      border-radius: 8px 8px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      color: #333;
+    }
+
+    .close {
+      color: #aaa;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: #000;
+      text-decoration: none;
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .form-group {
+      flex: 1;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #dee2e6;
+    }
+
+    .cancel-btn {
+      padding: 8px 16px;
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .cancel-btn:hover {
+      background-color: #5a6268;
+    }
+
+    .save-btn {
+      padding: 8px 16px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .save-btn:hover {
+      background-color: #218838;
     }
   </style>
 </body>

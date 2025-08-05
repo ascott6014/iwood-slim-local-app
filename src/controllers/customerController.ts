@@ -8,6 +8,7 @@ import {
   addCustomer,
   updateCustomer,
   deleteCustomer,
+  getCustomerById,
 } from "../models/customerModel"
 
 // GET /customers/all
@@ -69,6 +70,33 @@ export async function handleGetCustomersWithRecentVisits(
     console.error('Error details:', JSON.stringify(err, null, 2));
     const databaseErrorMessage = parseDatabaseError(err);
     res.status(500).json({ message: 'Error fetching customers with recent visits', error: databaseErrorMessage });
+  }
+}
+
+// GET /customers/:id
+// get a single customer by id
+export async function handleGetCustomer(
+  req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    const customerId = parseInt(req.params.id);
+    if (isNaN(customerId)) {
+      res.status(400).json({ message: 'Invalid customer ID' });
+      return;
+    }
+
+    const customer = await getCustomerById(customerId);
+    if (!customer) {
+      res.status(404).json({ message: 'Customer not found' });
+      return;
+    }
+
+    res.status(200).json(customer);
+  } catch (err) {
+    console.error('Error fetching customer:', err);
+    const databaseErrorMessage = parseDatabaseError(err);
+    res.status(500).json({ message: 'Error fetching customer', error: databaseErrorMessage });
   }
 }
 

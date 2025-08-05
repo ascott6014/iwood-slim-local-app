@@ -44,6 +44,15 @@ export async function getCustomers(): Promise<Customer[]> {
   return rows as Customer[];
 }
 
+export async function getCustomerById(customer_id: number): Promise<Customer | null> {
+  const [rows] = await db.query(
+    `SELECT * FROM customers WHERE customer_id = ?`,
+    [customer_id]
+  );
+  const customers = rows as Customer[];
+  return customers.length > 0 ? customers[0] : null;
+}
+
 // insert a new customer, return the insertResult
 export async function addCustomer(
   first_name: string,

@@ -3,7 +3,7 @@ import express, {Express} from 'express';
 import { handleCustomerAndRepair, handleRepairForCustomer, handleRepairPickup, handleRepairStatusUpdate, handleAddRepairItem, handleGetRepairItems, handleGetRepair, handleUpdateRepair, handleUpdateRepairItem, handleRemoveRepairItem } from './controllers/repairController';
 import { handleCreateCustomerOrder, handleCreateOrderForCustomer, handleCreateCompleteOrder, handleGetOrder, handleUpdateOrder } from './controllers/orderController';
 import { handleCreateCustomerInstall, handleCreateInstallForCustomer, handleGetInstallItemsById, handleAddInstallItem, handleUpdateInstallItem, handleRemoveInstallItem, handleGetInstall, handleUpdateInstall } from './controllers/installController';
-import { handleGetCustomers, handleAddCustomer, handleSearchCustomers, handleGetCustomersWithRecentVisits, handleUpdateCustomer, handleDeleteCustomer} from './controllers/customerController';
+import { handleGetCustomers, handleAddCustomer, handleSearchCustomers, handleGetCustomersWithRecentVisits, handleUpdateCustomer, handleDeleteCustomer, handleGetCustomer} from './controllers/customerController';
 import { handleGetInstallSummaries, handleGetOrderSummaries, handleGetRepairSummaries } from './controllers/summaryController';
 import { handleSearchItems, handleGetOrderItems, handleAddOrderItem, handleUpdateOrderItem, handleRemoveOrderItem, handleGetInstallItems, handleGetAllItems, handleGetItemById, handleCreateItem, handleUpdateItem, handleDeleteItem, handleGetSellableItems } from './controllers/itemController';
 
@@ -62,6 +62,7 @@ app.get('/api/items/install', handleGetInstallItems);
 app.get('/api/customers', handleGetCustomers);
 app.get('/api/customers/search', handleSearchCustomers);
 app.get('/api/customers/with-visits', handleGetCustomersWithRecentVisits);
+app.get('/api/customers/:id', handleGetCustomer);
 app.put('/api/customers/:id', handleUpdateCustomer);
 app.delete('/api/customers/:id', handleDeleteCustomer);
 
