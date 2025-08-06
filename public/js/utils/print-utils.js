@@ -203,6 +203,7 @@ function generateCustomerCopy(data, ticketType) {
         <div class="section">
           <div class="section-title">Installation Details</div>
           <div class="info-row"><span class="label">Description:</span> ${specificFields.description || 'N/A'}</div>
+          <div class="info-row"><span class="label">Install Location:</span> ${specificFields.installLocation || 'N/A'}</div>
           <div class="info-row"><span class="label">Install Date:</span> ${specificFields.installDate || 'N/A'}</div>
           ${specificFields.notes ? `<div class="info-row"><span class="label">Notes:</span> ${specificFields.notes}</div>` : ''}
         </div>`;
@@ -339,6 +340,7 @@ function generateBusinessCopy(data, ticketType) {
         <div class="compact-section">
           <div class="compact-title">Installation</div>
           <div class="compact-row"><span class="compact-label">Work:</span> ${specificFields.description && specificFields.description.length > 50 ? specificFields.description.substring(0, 50) + '...' : specificFields.description || 'N/A'}</div>
+          <div class="compact-row"><span class="compact-label">Location:</span> ${specificFields.installLocation && specificFields.installLocation.length > 30 ? specificFields.installLocation.substring(0, 30) + '...' : specificFields.installLocation || 'N/A'}</div>
           <div class="compact-row"><span class="compact-label">Date:</span> ${specificFields.installDate || 'N/A'}</div>
           <div class="compact-row"><span class="compact-label">Status:</span> Completed</div>
         </div>`;

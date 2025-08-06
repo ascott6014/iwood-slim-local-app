@@ -21,6 +21,7 @@ SELECT
     c.email,
     ins.install_id,
     ins.description,
+    ins.install_location,
     ins.estimate,
     ins.install_date,
     ins.notes,

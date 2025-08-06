@@ -83,12 +83,12 @@ INSERT INTO repair_items (repair_id, item_id, repair_item_quantity, total_price)
 (8, 1, 1, 150.00), (8, 5, 1, 45.00);
 
 -- Insert installs
-INSERT INTO installs (customer_id, description, estimate, install_date, notes) VALUES
-(2, 'Home security camera system setup', 450.00, '2025-02-15', 'All cameras functioning perfectly'),
-(4, 'Smart home automation installation', 650.00, '2025-03-01', 'Equipment ready for install'),
-(6, 'Gaming PC build and setup', 1200.00, '2025-03-10', 'CPU and motherboard installed'),
-(8, 'Home theater system wiring', 380.00, '2025-03-15', 'Surround sound working great'),
-(10, 'Network and Wi-Fi optimization', 250.00, '2025-03-20', 'Site survey completed');
+INSERT INTO installs (customer_id, description, install_location, estimate, install_date, notes) VALUES
+(2, 'Home security camera system setup', 'Living room and exterior', 450.00, '2025-02-15', 'All cameras functioning perfectly'),
+(4, 'Smart home automation installation', 'Throughout house', 650.00, '2025-03-01', 'Equipment ready for install'),
+(6, 'Gaming PC build and setup', 'Home office', 1200.00, '2025-03-10', 'CPU and motherboard installed'),
+(8, 'Home theater system wiring', 'Basement entertainment room', 380.00, '2025-03-15', 'Surround sound working great'),
+(10, 'Network and Wi-Fi optimization', 'Home office and bedrooms', 250.00, '2025-03-20', 'Site survey completed');
 
 -- Insert install items
 INSERT INTO install_items (install_id, item_id, install_item_quantity, total_price) VALUES

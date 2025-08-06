@@ -155,6 +155,7 @@ async function printInstallListWithItems(installs) {
             <div><strong>Phone:</strong> ${install.phone || 'N/A'}</div>
             <div><strong>Install Date:</strong> ${new Date(install.install_date).toLocaleDateString()}</div>
             <div><strong>Description:</strong> ${install.description || 'N/A'}</div>
+            <div><strong>Install Location:</strong> ${install.install_location || 'N/A'}</div>
             <div><strong>Estimate:</strong> $${install.estimate ? parseFloat(install.estimate).toFixed(2) : '0.00'}</div>
             <div><strong>Subtotal:</strong> $${install.subtotal ? parseFloat(install.subtotal).toFixed(2) : '0.00'}</div>
             <div style="grid-column: 1 / -1;"><strong>Notes:</strong> ${install.notes || 'N/A'}</div>
@@ -398,6 +399,7 @@ function renderInstalls() {
       <td>${install.first_name} ${install.last_name}</td>
       <td>${install.phone || 'N/A'}</td>
       <td>${install.description || 'N/A'}</td>
+      <td>${install.install_location || 'N/A'}</td>
       <td>${new Date(install.install_date).toLocaleDateString()}</td>
       <td>$${install.estimate ? parseFloat(install.estimate).toFixed(2) : '0.00'}</td>
       <td>$${install.install_items_total ? parseFloat(install.install_items_total).toFixed(2) : '0.00'}</td>
@@ -455,6 +457,7 @@ function populateInstallModal(install) {
   document.getElementById('edit_install_date').value = install.install_date ? install.install_date.split('T')[0] : '';
   document.getElementById('edit_customer_name').value = `${install.first_name} ${install.last_name}`;
   document.getElementById('edit_description').value = install.description || '';
+  document.getElementById('edit_install_location').value = install.install_location || '';
   document.getElementById('edit_estimate').value = install.estimate || '';
   document.getElementById('edit_notes').value = install.notes || '';
 }
@@ -657,6 +660,7 @@ async function updateInstall() {
   const installId = document.getElementById('edit_install_id').value;
   const installDate = document.getElementById('edit_install_date').value;
   const description = document.getElementById('edit_description').value;
+  const installLocation = document.getElementById('edit_install_location').value;
   const estimate = document.getElementById('edit_estimate').value;
   const notes = document.getElementById('edit_notes').value;
   
@@ -667,6 +671,7 @@ async function updateInstall() {
       body: JSON.stringify({
         install_date: installDate,
         description: description,
+        install_location: installLocation,
         estimate: parseFloat(estimate) || 0,
         notes: notes
       })

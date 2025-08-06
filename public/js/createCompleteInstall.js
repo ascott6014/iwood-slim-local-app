@@ -98,9 +98,10 @@ function changeCustomer() {
 function updateCreateButton() {
   const createBtn = document.getElementById('previewBtn');
   const description = document.getElementById('installDescription').value.trim();
+  const location = document.getElementById('installLocation').value.trim();
   const estimate = document.getElementById('installEstimate').value;
   
-  createBtn.disabled = !selectedCustomer || !description || !estimate;
+  createBtn.disabled = !selectedCustomer || !description || !location || !estimate;
 }
 
 // Item Management Functions
@@ -262,9 +263,11 @@ async function createInstall() {
 
   try {
     let installData = {
-      install_description: description,
+      description: description,
+      install_location: document.getElementById('installLocation').value.trim(),
       estimate: parseFloat(estimate),
       install_date: installDate || new Date().toISOString().split('T')[0], // Use today if no date provided
+      install_notes: document.getElementById('installNotes')?.value || null,
       items: selectedItems
     };
 
@@ -588,6 +591,7 @@ async function printInstallWithItems(result) {
     selectedCustomer.email;
 
   const installDescription = document.getElementById('installDescription').value;
+  const installLocation = document.getElementById('installLocation').value;
   const installEstimate = parseFloat(document.getElementById('installEstimate').value) || 0;
   const installDateValue = document.getElementById('installDate').value;
   const installDate = installDateValue ? new Date(installDateValue) : new Date();
@@ -608,6 +612,7 @@ async function printInstallWithItems(result) {
     phone: customerPhone,
     email: customerEmail,
     description: installDescription,
+    install_location: installLocation,
     install_date: !isNaN(installDate.getTime()) ? installDate.toISOString() : new Date().toISOString(),
     estimate: installEstimate,
     install_items_total: items.reduce((sum, item) => sum + parseFloat(item.total_price || 0), 0),
@@ -690,6 +695,7 @@ async function printInstallWithItems(result) {
           <div><strong>Email:</strong> ${install.email || 'N/A'}</div>
           <div><strong>Install Date:</strong> ${new Date(install.install_date).toLocaleDateString()}</div>
           <div><strong>Description:</strong> ${install.description || 'N/A'}</div>
+          <div><strong>Install Location:</strong> ${install.install_location || 'N/A'}</div>
           <div><strong>Estimate:</strong> $${install.estimate.toFixed(2)}</div>
           <div><strong>Item Total:</strong> $${install.install_items_total.toFixed(2)}</div>
           <div><strong>Subtotal:</strong> $${install.subtotal.toFixed(2)}</div>
@@ -747,11 +753,13 @@ async function printInstallWithItems(result) {
 document.addEventListener('DOMContentLoaded', () => {
   const customerSearchInput = document.getElementById('customerSearch');
   const installDescription = document.getElementById('installDescription');
+  const installLocation = document.getElementById('installLocation');
   const installEstimate = document.getElementById('installEstimate');
   const itemSearchInput = document.getElementById('itemSearch');
   
   customerSearchInput.addEventListener('input', debounce(searchCustomers, 300));
   installDescription.addEventListener('input', updateCreateButton);
+  installLocation.addEventListener('input', updateCreateButton);
   installEstimate.addEventListener('input', () => {
     updateCreateButton();
     updateTotalCosts();

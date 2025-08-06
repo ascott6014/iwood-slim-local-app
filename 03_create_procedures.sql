@@ -239,6 +239,7 @@ CREATE PROCEDURE AddCustomerAndInstall (
     IN phone VARCHAR(20),
     IN email VARCHAR(100),
     IN description TEXT,
+    IN install_location VARCHAR(255),
     IN estimate DECIMAL(10,2),
     IN install_date DATE,
     IN notes TEXT
@@ -249,8 +250,8 @@ BEGIN
 
     SET @cust_id = LAST_INSERT_ID();
 
-    INSERT INTO installs (customer_id, description, estimate, install_date, notes)
-    VALUES (@cust_id, description, estimate, install_date, notes);
+    INSERT INTO installs (customer_id, description, install_location, estimate, install_date, notes)
+    VALUES (@cust_id, description, install_location, estimate, install_date, notes);
     
     SELECT LAST_INSERT_ID() as install_id, @cust_id as customer_id;
 END//
@@ -260,13 +261,14 @@ DROP PROCEDURE IF EXISTS AddInstallForCustomer//
 CREATE PROCEDURE AddInstallForCustomer (
     IN customer_id INT,
     IN description TEXT,
+    IN install_location VARCHAR(255),
     IN estimate DECIMAL(10,2),
     IN install_date DATE,
     IN notes TEXT
 )
 BEGIN
-    INSERT INTO installs (customer_id, description, estimate, install_date, notes)
-    VALUES (customer_id, description, estimate, install_date, notes);
+    INSERT INTO installs (customer_id, description, install_location, estimate, install_date, notes)
+    VALUES (customer_id, description, install_location, estimate, install_date, notes);
     
     SELECT LAST_INSERT_ID() as install_id, customer_id;
 END//
@@ -319,6 +321,7 @@ CREATE PROCEDURE UpdateInstall (
     IN p_install_id INT,
     IN p_install_date DATE,
     IN p_description TEXT,
+    IN p_install_location VARCHAR(255),
     IN p_estimate DECIMAL(10,2),
     IN p_notes TEXT
 )
@@ -335,6 +338,7 @@ BEGIN
     SET 
         install_date = COALESCE(p_install_date, install_date),
         description = COALESCE(p_description, description),
+        install_location = COALESCE(p_install_location, install_location),
         estimate = COALESCE(p_estimate, estimate),
         notes = COALESCE(p_notes, notes),
         subtotal = ROUND(COALESCE(p_estimate, estimate) + items_total, 2)

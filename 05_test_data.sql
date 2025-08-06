@@ -124,8 +124,8 @@ INSERT INTO repair_items (repair_id, item_id, repair_item_quantity, total_price)
 -- ========================================
 
 -- Install 1: Robert Wilson - Home Office Network Setup
-INSERT INTO installs (customer_id, description, estimate, install_date, notes) VALUES
-(7, 'Set up home office network with hardwired connections and new router', 125.00, '2025-02-05', 'Customer wants gigabit speeds throughout home office');
+INSERT INTO installs (customer_id, description, install_location, estimate, install_date, notes) VALUES
+(7, 'Set up home office network with hardwired connections and new router', 'Home office and den', 125.00, '2025-02-05', 'Customer wants gigabit speeds throughout home office');
 SET @install1_id = LAST_INSERT_ID();
 
 INSERT INTO install_items (install_id, item_id, install_item_quantity, total_price) VALUES
@@ -134,8 +134,8 @@ INSERT INTO install_items (install_id, item_id, install_item_quantity, total_pri
 (@install1_id, 15, 1, 25.50);  -- 1 Microfiber Cloth Pack: 12.75 * 2.00 = 25.50
 
 -- Install 2: Lisa Moore - Gaming Computer Build
-INSERT INTO installs (customer_id, description, estimate, install_date, notes) VALUES
-(8, 'Build custom gaming computer with high-end components', 275.00, '2025-02-12', 'Customer provided most parts, we supply RAM, storage, and assembly');
+INSERT INTO installs (customer_id, description, install_location, estimate, install_date, notes) VALUES
+(8, 'Build custom gaming computer with high-end components', 'Bedroom gaming setup', 275.00, '2025-02-12', 'Customer provided most parts, we supply RAM, storage, and assembly');
 SET @install2_id = LAST_INSERT_ID();
 
 INSERT INTO install_items (install_id, item_id, install_item_quantity, total_price) VALUES
@@ -146,8 +146,8 @@ INSERT INTO install_items (install_id, item_id, install_item_quantity, total_pri
 (@install2_id, 14, 1, 148.48); -- 1 Power Supply 650W: 89.99 * 1.65 = 148.48
 
 -- Install 3: James Taylor - Small Business Network Infrastructure
-INSERT INTO installs (customer_id, description, estimate, install_date, notes) VALUES
-(9, 'Install network infrastructure for small business with 8 workstations', 350.00, '2025-02-18', 'Includes cable management and network documentation');
+INSERT INTO installs (customer_id, description, install_location, estimate, install_date, notes) VALUES
+(9, 'Install network infrastructure for small business with 8 workstations', 'Office building - all floors', 350.00, '2025-02-18', 'Includes cable management and network documentation');
 SET @install3_id = LAST_INSERT_ID();
 
 INSERT INTO install_items (install_id, item_id, install_item_quantity, total_price) VALUES
@@ -156,8 +156,8 @@ INSERT INTO install_items (install_id, item_id, install_item_quantity, total_pri
 (@install3_id, 15, 3, 76.50);   -- 3 Microfiber Cloth Packs: 12.75 * 2.00 * 3 = 76.50
 
 -- Install 4: Michelle Anderson - Complete Workstation Setup
-INSERT INTO installs (customer_id, description, estimate, install_date, notes) VALUES
-(10, 'Set up complete workstation with dual monitors, docking station, and peripherals', 175.00, '2025-02-25', 'Premium setup with cable management and ergonomic positioning');
+INSERT INTO installs (customer_id, description, install_location, estimate, install_date, notes) VALUES
+(10, 'Set up complete workstation with dual monitors, docking station, and peripherals', 'Home office corner desk', 175.00, '2025-02-25', 'Premium setup with cable management and ergonomic positioning');
 SET @install4_id = LAST_INSERT_ID();
 
 INSERT INTO install_items (install_id, item_id, install_item_quantity, total_price) VALUES

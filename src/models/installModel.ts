@@ -3,7 +3,7 @@ import { db } from '../dataSource';
 
 export async function createCustomerAndInstall(data: CustomerInstallInput) {
   const [rows] = await db.query(
-    'CALL AddCustomerAndInstall(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    'CALL AddCustomerAndInstall(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
     [
       data.first_name,
       data.last_name,
@@ -14,6 +14,7 @@ export async function createCustomerAndInstall(data: CustomerInstallInput) {
       data.phone,
       data.email,
       data.description,
+      data.install_location,
       data.estimate,
       data.install_date,
       data.install_notes ?? null,
@@ -24,10 +25,11 @@ export async function createCustomerAndInstall(data: CustomerInstallInput) {
 
 export async function createInstallForCustomer(data: InstallOnlyInput) {
   const [rows] = await db.query(
-    'CALL AddInstallForCustomer(?, ?, ?, ?, ?)',
+    'CALL AddInstallForCustomer(?, ?, ?, ?, ?, ?)',
     [
       data.customer_id,
       data.description,
+      data.install_location,
       data.estimate,
       data.install_date,
       data.install_notes ?? null,
@@ -91,13 +93,14 @@ export async function getInstallById(installId: number) {
   return (rows as any[])[0];
 }
 
-export async function updateInstall(installId: number, data: { install_date?: string; description?: string; estimate?: number; notes?: string }) {
+export async function updateInstall(installId: number, data: { install_date?: string; description?: string; install_location?: string; estimate?: number; notes?: string }) {
   const [result] = await db.query(
-    'CALL UpdateInstall(?, ?, ?, ?, ?)',
+    'CALL UpdateInstall(?, ?, ?, ?, ?, ?)',
     [
       installId,
       data.install_date || null,
       data.description || null,
+      data.install_location || null,
       data.estimate || null,
       data.notes || null
     ]

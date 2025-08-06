@@ -58,6 +58,7 @@ CREATE TABLE installs (
     install_id INT PRIMARY KEY AUTO_INCREMENT,
     customer_id INT NOT NULL,
     description TEXT,
+    install_location VARCHAR(255) NOT NULL,
     estimate DECIMAL(10,2) NOT NULL,
     install_date DATE,
     notes TEXT,
