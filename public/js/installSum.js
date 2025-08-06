@@ -294,6 +294,14 @@ function applySorting() {
           return new Date(b.install_date) - new Date(a.install_date);
         case 'date-oldest':
           return new Date(a.install_date) - new Date(b.install_date);
+        case 'amount-highest':
+          const subtotalB = parseFloat(b.subtotal) || 0;
+          const subtotalA = parseFloat(a.subtotal) || 0;
+          return subtotalB - subtotalA;
+        case 'amount-lowest':
+          const subtotalA2 = parseFloat(a.subtotal) || 0;
+          const subtotalB2 = parseFloat(b.subtotal) || 0;
+          return subtotalA2 - subtotalB2;
         default:
           return 0;
       }

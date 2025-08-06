@@ -20,6 +20,19 @@
           </select>
           <input type="hidden" id="customer_id" />
         </div>
+        
+        <div class="filter-row">
+          <div class="button-group">
+            <h4>Sort By:</h4>
+            <button type="button" class="filter-btn active" data-sort="none">No Sorting</button>
+            <button type="button" class="filter-btn" data-sort="customer-asc">Customer (A-Z)</button>
+            <button type="button" class="filter-btn" data-sort="customer-desc">Customer (Z-A)</button>
+            <button type="button" class="filter-btn" data-sort="date-newest">Newest First</button>
+            <button type="button" class="filter-btn" data-sort="date-oldest">Oldest First</button>
+            <button type="button" class="filter-btn" data-sort="amount-highest">Highest Amount</button>
+            <button type="button" class="filter-btn" data-sort="amount-lowest">Lowest Amount</button>
+          </div>
+        </div>
       </div>
 
       <div class="table-wrapper">
