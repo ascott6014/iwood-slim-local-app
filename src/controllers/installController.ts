@@ -140,11 +140,11 @@ export async function handleGetInstall(req: Request, res: Response) {
       return res.status(404).json({ message: 'Install not found' });
     }
     
-    res.status(200).json(install);
+    return res.status(200).json(install);
   } catch (error) {
     console.error(error);
     const databaseErrorMessage = parseDatabaseError(error);
-    res.status(500).json({ message: 'Error fetching install', databaseErrorMessage });
+    return res.status(500).json({ message: 'Error fetching install', databaseErrorMessage });
   }
 }
 
