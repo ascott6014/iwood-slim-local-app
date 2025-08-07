@@ -404,8 +404,8 @@ function printOrder(orderId) {
 }
 
 function editOrder(orderId) {
-  // Implementation for editing order
-  window.location.href = `/manage-order.html?id=${orderId}`;
+  // Use the modal functionality instead of separate page
+  modifyOrder(orderId);
 }
 
 // Modal functionality for comprehensive order editing
