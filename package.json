@@ -18,7 +18,7 @@
     "package-win": "npm run build && pkg . --targets node18-win-x64 --out-path build",
     "package-all": "npm run build && pkg . --targets node18-win-x64,node18-linux-x64,node18-macos-x64 --out-path build",
     "dist": "npm run package-win && npm run copy-assets",
-    "copy-assets": "powershell -Command \"Copy-Item public build\\public -Recurse -Force; Copy-Item views build\\views -Recurse -Force; Copy-Item .env.example build\\.env -Force; Copy-Item *.sql build\\ -Force; Copy-Item DEPLOYMENT_GUIDE.md build\\ -Force; Copy-Item INSTALLATION.md build\\ -Force; Copy-Item README.md build\\ -Force; Copy-Item LICENSE build\\ -Force; Copy-Item start-iwood.bat build\\ -Force\"",
+    "copy-assets": "powershell -Command \"Copy-Item public build\\public -Recurse -Force; Copy-Item views build\\views -Recurse -Force; Copy-Item .env.example build\\.env -Force; Copy-Item *.sql build\\ -Force; Copy-Item DEPLOYMENT_GUIDE.md build\\ -Force; Copy-Item INSTALLATION.md build\\ -Force; Copy-Item UPDATE_GUIDE.md build\\ -Force; Copy-Item README.md build\\ -Force; Copy-Item LICENSE build\\ -Force; Copy-Item start-iwood.bat build\\ -Force\"",
     "release": "npm run dist && powershell -Command \"Compress-Archive -Path 'build\\*' -DestinationPath 'iwood-slim-local-app-windows.zip' -Force\""
   },
   "devDependencies": {
