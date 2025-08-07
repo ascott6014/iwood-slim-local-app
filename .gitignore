@@ -6,6 +6,14 @@ yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
 
+# Build artifacts and releases
+build/
+dist/
+*.exe
+*.zip
+*.tar.gz
+*.tgz
+
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
