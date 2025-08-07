@@ -522,297 +522,42 @@ function printRepairTicket(result) {
   const dropOffDate = new Date(document.getElementById('dropOffDate').value);
   const notes = document.getElementById('notesRepair').value;
 
-  // Create customer copy (full detailed version)
-  const customerCopy = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Repair Ticket #${result.repair_id} - Customer Copy</title>
-      <style>
-        body { 
-          font-family: Arial, sans-serif; 
-          margin: 20px; 
-          line-height: 1.4;
-          font-size: 12px;
-        }
-        .header { 
-          text-align: center; 
-          border-bottom: 2px solid #333; 
-          padding-bottom: 10px; 
-          margin-bottom: 20px;
-        }
-        .company-name { 
-          font-size: 18px; 
-          font-weight: bold; 
-          margin-bottom: 5px;
-        }
-        .ticket-title { 
-          font-size: 16px; 
-          font-weight: bold; 
-          margin-bottom: 20px;
-        }
-        .copy-type {
-          text-align: center;
-          font-size: 14px;
-          font-weight: bold;
-          color: #007bff;
-          margin-bottom: 15px;
-        }
-        .ticket-title { 
-          font-size: 16px; 
-          font-weight: bold; 
-          margin-bottom: 20px;
-        }
-        .copy-type {
-          text-align: center;
-          font-size: 14px;
-          font-weight: bold;
-          color: #007bff;
-          margin-bottom: 15px;
-        }
-        .section { 
-          margin-bottom: 15px; 
-          padding: 10px;
-          border: 1px solid #ccc;
-        }
-        .section-title { 
-          font-weight: bold; 
-          font-size: 14px; 
-          margin-bottom: 8px;
-          border-bottom: 1px solid #666;
-          padding-bottom: 3px;
-        }
-        .info-row { 
-          margin: 5px 0; 
-        }
-        .label { 
-          font-weight: bold; 
-          display: inline-block; 
-          width: 120px;
-        }
-        .items-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 10px;
-        }
-        .items-table th, .items-table td {
-          border: 1px solid #333;
-          padding: 5px;
-          text-align: left;
-        }
-        .items-table th {
-          background-color: #f0f0f0;
-          font-weight: bold;
-        }
-        .total-section {
-          margin-top: 15px;
-          padding: 10px;
-          border: 2px solid #333;
-          background-color: #f9f9f9;
-        }
-        .footer {
-          margin-top: 30px;
-          border-top: 1px solid #333;
-          padding-top: 10px;
-          text-align: center;
-          font-size: 10px;
-        }
-        @media print {
-          body { margin: 0; }
-          .no-print { display: none; }
-        }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <div class="company-name">iWoodFix-IT</div>
-        <div>Professional Repair Services</div>
-      </div>
-      
-      <div class="copy-type">CUSTOMER COPY</div>
-      <div class="ticket-title">REPAIR TICKET #${result.repair_id}</div>
-      
-      <div class="section">
-        <div class="section-title">Customer Information</div>
-        <div class="info-row"><span class="label">Name:</span> ${customerName}</div>
-        <div class="info-row"><span class="label">Phone:</span> ${customerPhone}</div>
-        <div class="info-row"><span class="label">Email:</span> ${customerEmail || 'N/A'}</div>
-      </div>
-      
-      <div class="section">
-        <div class="section-title">Repair Details</div>
-        <div class="info-row"><span class="label">Items Brought:</span> ${itemsBrought}</div>
-        <div class="info-row"><span class="label">Problem:</span> ${problem}</div>
-        <div class="info-row"><span class="label">Solution:</span> ${solution}</div>
-        <div class="info-row"><span class="label">Status:</span> ${status}</div>
-        <div class="info-row"><span class="label">Drop-off Date:</span> ${dropOffDate.toLocaleDateString()} ${dropOffDate.toLocaleTimeString()}</div>
-        ${notes ? `<div class="info-row"><span class="label">Notes:</span> ${notes}</div>` : ''}
-      </div>
-      
-      ${selectedItems.length > 0 ? `
-      <div class="section">
-        <div class="section-title">Repair Items Used</div>
-        <table class="items-table">
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Color/Model</th>
-              <th>Price</th>
-              <th>Qty</th>
-              <th>Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${selectedItems.map(item => `
-              <tr>
-                <td>${item.item_name}</td>
-                <td>${item.item_color} ${item.item_model}</td>
-                <td>$${item.price.toFixed(2)}</td>
-                <td>${item.quantity}</td>
-                <td>$${item.total.toFixed(2)}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-      ` : ''}
-      
-      <div class="total-section">
-        <div class="section-title">Cost Summary</div>
-        <div class="info-row"><span class="label">Labor Estimate:</span> $${estimate.toFixed(2)}</div>
-        ${selectedItems.length > 0 ? `<div class="info-row"><span class="label">Parts/Items:</span> $${totalItemsAmount.toFixed(2)}</div>` : ''}
-        <div class="total-row">
-          <span class="label">TOTAL ESTIMATE:</span> $${(estimate + totalItemsAmount).toFixed(2)}
-        </div>
-      </div>
-      
-      <div class="footer">
-        <p>Thank you for choosing iWoodFix-IT!</p>
-        <p>This is an estimate. Final charges may vary based on actual work performed.</p>
-        <p>Please keep this ticket for your records.</p>
-      </div>
-      
-      <div class="print-controls">
-        <button onclick="window.print()" class="print-btn">Print Both Copies</button>
-        <button onclick="window.close()" class="close-btn">Close</button>
-      </div>
-    </body>
-    </html>
-    
-    <div class="page-break"></div>
-    
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Repair Ticket #\${result.repair_id} - Business Copy</title>
-      <style>
-        body { 
-          font-family: Arial, sans-serif; 
-          margin: 10px; 
-          line-height: 1.2;
-          font-size: 10px;
-        }
-        .header { 
-          text-align: center; 
-          border-bottom: 1px solid #333; 
-          padding-bottom: 5px; 
-          margin-bottom: 10px;
-        }
-        .company-name { 
-          font-size: 14px; 
-          font-weight: bold; 
-          margin-bottom: 2px;
-        }
-        .ticket-title { 
-          font-size: 12px; 
-          font-weight: bold; 
-          margin-bottom: 10px;
-        }
-        .copy-type {
-          text-align: center;
-          font-size: 10px;
-          font-weight: bold;
-          color: #dc3545;
-          margin-bottom: 8px;
-        }
-        .compact-section { 
-          margin-bottom: 8px; 
-          padding: 5px;
-          border: 1px solid #ccc;
-        }
-        .compact-title { 
-          font-weight: bold; 
-          font-size: 10px; 
-          margin-bottom: 3px;
-          text-decoration: underline;
-        }
-        .compact-row { 
-          margin: 2px 0;
-          font-size: 9px; 
-        }
-        .compact-label { 
-          font-weight: bold; 
-          display: inline-block; 
-          width: 60px;
-        }
-        .total-compact {
-          background-color: #f0f0f0;
-          padding: 5px;
-          border: 1px solid #333;
-          text-align: center;
-          font-weight: bold;
-          margin-top: 8px;
-        }
-        @media print {
-          body { margin: 0; }
-          .no-print { display: none; }
-        }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <div class="company-name">iWoodFix-IT</div>
-      </div>
-      
-      <div class="copy-type">BUSINESS COPY</div>
-      <div class="ticket-title">REPAIR #${result.repair_id}</div>
-      
-      <div class="compact-section">
-        <div class="compact-title">Customer</div>
-        <div class="compact-row"><span class="compact-label">Name:</span> ${customerName}</div>
-        <div class="compact-row"><span class="compact-label">Phone:</span> ${customerPhone}</div>
-      </div>
-      
-      <div class="compact-section">
-        <div class="compact-title">Items & Problem</div>
-        <div class="compact-row"><span class="compact-label">Items:</span> ${itemsBrought}</div>
-        <div class="compact-row"><span class="compact-label">Problem:</span> ${problem.length > 50 ? problem.substring(0, 50) + '...' : problem}</div>
-        <div class="compact-row"><span class="compact-label">Status:</span> ${status}</div>
-        <div class="compact-row"><span class="compact-label">Drop-off:</span> ${dropOffDate.toLocaleDateString()}</div>
-      </div>
-      
-      <div class="total-compact">
-        TOTAL ESTIMATE: $${(estimate + totalItemsAmount).toFixed(2)}
-      </div>
-      
-      <div class="print-timestamp">
-        Created: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}
-      </div>
-    </body>
-    </html>
-  `;
-
-  // Open print window with both copies
-  const printWindow = window.open('', '_blank');
-  printWindow.document.write(customerCopy);
-  printWindow.document.close();
-  
-  // Auto-print after content loads
-  printWindow.onload = function() {
-    setTimeout(() => {
-      printWindow.print();
-    }, 250);
+  // Prepare data for the shared print utility
+  const ticketData = {
+    ticketId: result.repair_id,
+    customerName: customerName,
+    customerPhone: customerPhone,
+    customerEmail: customerEmail,
+    customerAddress: '', // Add if available
+    items: selectedItems || [],
+    totalAmount: estimate + totalItemsAmount,
+    specificFields: {
+      itemsBrought: itemsBrought,
+      problem: problem,
+      solution: solution,
+      status: status,
+      dropOffDate: dropOffDate.toLocaleDateString(),
+      notes: notes,
+      laborCost: estimate
+    }
   };
+
+  // Use the shared print utility
+  if (window.PrintUtils && window.PrintUtils.printDualCopyTicket) {
+    window.PrintUtils.printDualCopyTicket(ticketData, 'repair');
+  } else {
+    console.error('Print utility not available');
+  }
+}
+
+function submitRepair() {
+  closeRepairReview();
+  createRepair();
+}
+
+function printRepairReview() {
+  // Show review popup
+  showRepairReview();
 }
 
 function submitRepair() {
