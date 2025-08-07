@@ -422,8 +422,8 @@ function renderInstalls() {
 }
 
 function editInstall(installId) {
-  // Implementation for editing install
-  window.location.href = `/manage-install.html?id=${installId}`;
+  // Use the modal functionality instead of separate page
+  modifyInstall(installId);
 }
 
 // Modal functionality for comprehensive install editing
