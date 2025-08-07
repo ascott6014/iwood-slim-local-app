@@ -29,16 +29,16 @@ jobs:
       
     - name: Create release package
       run: |
-        Compress-Archive -Path "build\*" -DestinationPath "iwood-slim-local-app-windows.zip"
+        npm run release
         
     - name: Get version from tag
       id: get_version
       run: |
         $version = $env:GITHUB_REF -replace 'refs/tags/', ''
-        echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+        echo "VERSION=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
         
     - name: Create Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         name: "iWood Slim Local App ${{ steps.get_version.outputs.VERSION }}"
         body: |
