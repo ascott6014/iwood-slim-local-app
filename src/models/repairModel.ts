@@ -1,4 +1,4 @@
-import { db } from "../dataSource";
+const { db } = require("../dataSource");
 
 
 // function normalizeDate(datetimeInput: string): string {

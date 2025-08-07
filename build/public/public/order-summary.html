@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>IwoodFixIt - Order Log</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <div class="page-container">
+    <div class="form-wrapper summary-container">
+      <h1>Order Log</h1>
+
+      <div class="search-section">
+        <div class="search-row">
+          <label for="customerSearch">Search Customers:</label>
+          <input type="text" id="customerSearch" placeholder="Start typing a name..." />
+          <select id="customerResults">
+            <option value="">All Customers</option>
+          </select>
+          <input type="hidden" id="customer_id" />
+        </div>
+        
+        <div class="filter-row">
+          <div class="button-group">
+            <h4>Sort By:</h4>
+            <button type="button" class="filter-btn active" data-sort="none">No Sorting</button>
+            <button type="button" class="filter-btn" data-sort="customer-asc">Customer (A-Z)</button>
+            <button type="button" class="filter-btn" data-sort="customer-desc">Customer (Z-A)</button>
+            <button type="button" class="filter-btn" data-sort="date-newest">Newest First</button>
+            <button type="button" class="filter-btn" data-sort="date-oldest">Oldest First</button>
+            <button type="button" class="filter-btn" data-sort="amount-highest">Highest Amount</button>
+            <button type="button" class="filter-btn" data-sort="amount-lowest">Lowest Amount</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="summary-table">
+        <thead>
+          <tr>
+            <th>
+              <input type="checkbox" id="selectAllOrders" onchange="toggleSelectAll('orders')">
+              <label for="selectAllOrders">Select All</label>
+            </th>
+            <th>Order ID</th>
+            <th>Customer ID</th>
+            <th>Customer Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Order Date</th>
+            <th>Subtotal</th>
+            <th>Details</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="order-body"></tbody>
+      </table>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" onclick="location.href='orders.html'">
+          Back to Orders
+        </button>
+        <button type="button" onclick="location.href='index.html'">
+          Home
+        </button>
+        <button type="button" id="printSelectedBtn" onclick="printSelectedOrders()" style="background-color: #28a745;" disabled>
+          Print Selected (<span id="selectedCount">0</span>)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Order Modal -->
+  <div id="editOrderModal" class="modal" style="display: none;">
+    <div class="modal-content large-modal">
+      <div class="modal-header">
+        <h2>Edit Order</h2>
+        <span class="close" onclick="closeEditOrderModal()">&times;</span>
+      </div>
+      
+      <div class="modal-body">
+        <!-- Order Information Section -->
+        <div class="modal-section">
+          <h3>Order Information</h3>
+          <form id="editOrderForm" class="modal-form">
+            <input type="hidden" id="edit_order_id">
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="edit_order_date">Order Date*:</label>
+                <input type="date" id="edit_order_date" name="order_date" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="edit_customer_name">Customer:</label>
+                <input type="text" id="edit_customer_name" readonly style="background-color: #f8f9fa; cursor: not-allowed;">
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Order Items Section -->
+        <div class="modal-section">
+          <h3>Order Items</h3>
+          
+          <!-- Add Item Section -->
+          <div class="add-item-section">
+            <h4>Add Item</h4>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="item_search">Search Items:</label>
+                <input type="text" id="item_search" placeholder="Type to search items..." onkeyup="searchAvailableItems()">
+              </div>
+              
+              <div class="form-group">
+                <label for="available_items">Available Items:</label>
+                <select id="available_items" onchange="populateItemDetails()">
+                  <option value="">Select an item...</option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label for="item_quantity">Quantity:</label>
+                <input type="number" id="item_quantity" min="1" value="1">
+              </div>
+              
+              <div class="form-group">
+                <button type="button" onclick="addItemToOrder()" class="add-btn">Add Item</button>
+              </div>
+            </div>
+            
+            <div class="item-details" id="item_details" style="display: none;">
+              <p><strong>Price:</strong> $<span id="item_price">0.00</span></p>
+              <p><strong>Available:</strong> <span id="item_available">0</span> units</p>
+            </div>
+          </div>
+
+          <!-- Current Items Table -->
+          <div class="current-items-section">
+            <h4>Current Items</h4>
+            <div class="table-wrapper">
+              <table class="modal-table">
+                <thead>
+                  <tr>
+                    <th>Item Name</th>
+                    <th>Color/Model</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="current_order_items">
+                  <!-- Items will be loaded here -->
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td colspan="4" style="text-align: right; font-weight: bold;">Order Total:</td>
+                    <td style="font-weight: bold;">$<span id="order_total">0.00</span></td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-buttons">
+        <button type="button" onclick="updateOrder()" class="submit-btn">Update Order</button>
+        <button type="button" onclick="closeEditOrderModal()" class="cancel-btn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Utility Scripts -->
+  <script src="/js/utils/shared-utils.js"></script>
+  <script src="/js/utils/print-utils.js"></script>
+  <script src="/js/utils/customer-search.js"></script>
+  <script src="/js/utils/selection-manager.js"></script>
+  
+  <!-- Main Script -->
+  <script src="/js/orderSum.js"></script>
+</body>
+</html>

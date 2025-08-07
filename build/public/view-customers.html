@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>View All Customers - Tech Repair Shop</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>All Customers</h1>
+      <div class="nav-buttons">
+        <a href="index.html" class="summary-table button">Back to Home</a>
+        <a href="customer-form.html" class="summary-table button">Add New Customer</a>
+      </div>
+    </div>
+
+    <!-- Search Section -->
+    <div class="section">
+      <div class="customer-search">
+        <label for="customer-search">Search Customers:</label>
+        <input type="text" id="searchInput" placeholder="Search by name, phone, or email...">
+        <input type="hidden" id="customer_id" />
+      </div>
+      
+      <div class="filter-row" style="margin-top: 15px;">
+        <div class="button-group">
+          <h4>Visit Type:</h4>
+          <button type="button" class="filter-btn active" data-visit-type="all">All Types</button>
+          <button type="button" class="filter-btn" data-visit-type="Order">Order</button>
+          <button type="button" class="filter-btn" data-visit-type="Repair">Repair</button>
+          <button type="button" class="filter-btn" data-visit-type="Install">Install</button>
+          <button type="button" class="filter-btn" data-visit-type="New Customer">New Customer</button>
+        </div>
+      </div>
+      
+      <div class="filter-row">
+        <div class="button-group">
+          <h4>Sort By:</h4>
+          <button type="button" class="filter-btn active" data-sort="none">No Sorting</button>
+          <button type="button" class="filter-btn" data-sort="name-asc">Name (A-Z)</button>
+          <button type="button" class="filter-btn" data-sort="name-desc">Name (Z-A)</button>
+          <button type="button" class="filter-btn" data-sort="date-newest">Newest Visit</button>
+          <button type="button" class="filter-btn" data-sort="date-oldest">Oldest Visit</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" style="text-align: center; display: none;">
+      <p>Loading customers...</p>
+    </div>
+
+    <!-- Customer Table Section -->
+    <div class="section">
+      <h2>Customer List</h2>
+      <div id="customerTableContainer">
+        <div class="table-wrapper">
+          <table id="customerTable" class="summary-table" style="display: none;">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Address</th>
+                <th>Last Visit</th>
+                <th>Visit Type</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="customerTableBody">
+              <!-- Table rows will be populated here -->
+            </tbody>
+          </table>
+        </div>
+        
+        <div id="noCustomersMessage" style="text-align: center; display: none;">
+          <p>No customers found.</p>
+          <a href="customer-form.html" class="summary-table button">Create First Customer</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Customer Edit Modal -->
+  <div id="editCustomerModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Edit Customer</h3>
+        <span class="close" onclick="closeEditCustomerModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <form id="editCustomerForm">
+          <input type="hidden" id="editCustomerId" name="customer_id">
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="editFirstName">First Name *</label>
+              <input type="text" id="editFirstName" name="first_name" required>
+            </div>
+            <div class="form-group">
+              <label for="editLastName">Last Name *</label>
+              <input type="text" id="editLastName" name="last_name" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="editPhone">Phone *</label>
+              <input type="tel" id="editPhone" name="phone" required>
+            </div>
+            <div class="form-group">
+              <label for="editEmail">Email</label>
+              <input type="email" id="editEmail" name="email">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="editAddress">Address</label>
+              <input type="text" id="editAddress" name="address">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="editCity">City</label>
+              <input type="text" id="editCity" name="city">
+            </div>
+            <div class="form-group">
+              <label for="editState">State</label>
+              <input type="text" id="editState" name="state">
+            </div>
+            <div class="form-group">
+              <label for="editZip">ZIP Code</label>
+              <input type="text" id="editZip" name="zip">
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" onclick="closeEditCustomerModal()" class="cancel-btn">Cancel</button>
+            <button type="submit" class="save-btn">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allCustomers = [];
+    let filteredCustomers = [];
+
+    document.addEventListener('DOMContentLoaded', function() {
+      loadCustomers();
+      
+      // Set up event listeners
+      document.getElementById('searchInput').addEventListener('input', filterAndSortCustomers);
+      
+      // Set up visit type filter button event listeners
+      document.querySelectorAll('.filter-btn[data-visit-type]').forEach(btn => {
+        btn.addEventListener('click', function() {
+          // Remove active class from all visit type buttons
+          document.querySelectorAll('.filter-btn[data-visit-type]').forEach(b => b.classList.remove('active'));
+          // Add active class to clicked button
+          this.classList.add('active');
+          filterAndSortCustomers();
+        });
+      });
+      
+      // Set up sort button event listeners
+      document.querySelectorAll('.filter-btn[data-sort]').forEach(btn => {
+        btn.addEventListener('click', function() {
+          // Remove active class from all sort buttons
+          document.querySelectorAll('.filter-btn[data-sort]').forEach(b => b.classList.remove('active'));
+          // Add active class to clicked button
+          this.classList.add('active');
+          filterAndSortCustomers();
+        });
+      });
+
+      // Add form submission handler for customer edit
+      document.getElementById('editCustomerForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const customerId = formData.get('customer_id');
+        
+        // Prepare update data
+        const updateData = {
+          first_name: formData.get('first_name').trim(),
+          last_name: formData.get('last_name').trim(),
+          phone: formData.get('phone').trim(),
+          email: formData.get('email').trim() || null,
+          address: formData.get('address').trim() || null,
+          city: formData.get('city').trim() || null,
+          state: formData.get('state').trim() || null,
+          zip: formData.get('zip').trim() || null
+        };
+
+        try {
+          const response = await fetch(`/api/customers/${customerId}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(updateData)
+          });
+
+          const result = await response.json();
+          
+          if (response.ok) {
+            alert('Customer updated successfully!');
+            closeEditCustomerModal();
+            loadCustomers(); // Reload the customer list
+          } else {
+            alert('Error updating customer: ' + (result.error || result.message || 'Unknown error'));
+          }
+        } catch (error) {
+          console.error('Error updating customer:', error);
+          alert('Error updating customer. Please try again.');
+        }
+      });
+    });
+
+    async function loadCustomers() {
+      const loadingIndicator = document.getElementById('loadingIndicator');
+      const customerTable = document.getElementById('customerTable');
+      const noCustomersMessage = document.getElementById('noCustomersMessage');
+      
+      try {
+        loadingIndicator.style.display = 'block';
+        customerTable.style.display = 'none';
+        noCustomersMessage.style.display = 'none';
+
+        const response = await fetch('/api/customers/with-visits');
+        if (!response.ok) {
+          throw new Error('Failed to fetch customers');
+        }
+
+        allCustomers = await response.json();
+        filteredCustomers = [...allCustomers];
+        
+        loadingIndicator.style.display = 'none';
+        
+        if (allCustomers.length === 0) {
+          noCustomersMessage.style.display = 'block';
+        } else {
+          customerTable.style.display = 'table';
+          displayCustomers(filteredCustomers);
+        }
+      } catch (error) {
+        console.error('Error loading customers:', error);
+        loadingIndicator.style.display = 'none';
+        noCustomersMessage.style.display = 'block';
+        document.querySelector('#noCustomersMessage p').textContent = 'Error loading customers. Please try again.';
+      }
+    }
+
+    function displayCustomers(customers) {
+      const tbody = document.getElementById('customerTableBody');
+      tbody.innerHTML = '';
+
+      customers.forEach(customer => {
+        const row = document.createElement('tr');
+        
+        // Format address
+        const address = formatAddress(customer.address, customer.city, customer.state, customer.zip);
+        
+        // Format last visit
+        const lastVisit = formatLastVisit(customer.last_visit_date);
+        const visitType = customer.last_visit_type || '-';
+        
+        row.innerHTML = `
+          <td><strong>${customer.first_name} ${customer.last_name}</strong></td>
+          <td>${customer.phone}</td>
+          <td>${customer.email || '-'}</td>
+          <td>${address}</td>
+          <td>${lastVisit}</td>
+          <td>${visitType}</td>
+          <td>
+            <button onclick="modifyCustomer(${customer.customer_id})" class="modify-customer-btn" style="padding: 5px 10px; font-size: 11px; margin-right: 5px; min-width: 60px;">
+              Modify
+            </button>
+            <button onclick="deleteCustomer(${customer.customer_id})" class="remove-item-btn" style="padding: 5px 10px; font-size: 11px; min-width: 60px;">
+              Delete
+            </button>
+          </td>
+        `;
+        
+        tbody.appendChild(row);
+      });
+    }
+
+    function formatAddress(address, city, state, zip) {
+      if (!address && !city && !state && !zip) return '-';
+      
+      const parts = [];
+      if (address) parts.push(address);
+      if (city) parts.push(city);
+      if (state) parts.push(state);
+      if (zip) parts.push(zip);
+      
+      return parts.join(', ');
+    }
+
+    function formatLastVisit(visitDate) {
+      if (!visitDate) return 'No visits';
+      
+      const date = new Date(visitDate);
+      return date.toLocaleDateString();
+    }
+
+    function filterAndSortCustomers() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+      const activeVisitType = document.querySelector('.filter-btn[data-visit-type].active').getAttribute('data-visit-type');
+      const activeSortOption = document.querySelector('.filter-btn[data-sort].active').getAttribute('data-sort');
+      
+      // First, filter by search term and visit type
+      filteredCustomers = allCustomers.filter(customer => {
+        // Search filter
+        const matchesSearch = !searchTerm || 
+          customer.first_name.toLowerCase().includes(searchTerm) ||
+          customer.last_name.toLowerCase().includes(searchTerm) ||
+          customer.phone.includes(searchTerm) ||
+          (customer.email && customer.email.toLowerCase().includes(searchTerm));
+        
+        // Visit type filter
+        let matchesVisitType = true;
+        if (activeVisitType !== 'all') {
+          matchesVisitType = customer.last_visit_type === activeVisitType;
+        }
+        
+        return matchesSearch && matchesVisitType;
+      });
+      
+      // Then, sort the filtered results
+      if (activeSortOption !== 'none') {
+        filteredCustomers.sort((a, b) => {
+          switch (activeSortOption) {
+            case 'name-asc':
+              return `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`);
+            case 'name-desc':
+              return `${b.first_name} ${b.last_name}`.localeCompare(`${a.first_name} ${a.last_name}`);
+            case 'date-newest':
+              const dateA = a.last_visit_date ? new Date(a.last_visit_date) : new Date(0);
+              const dateB = b.last_visit_date ? new Date(b.last_visit_date) : new Date(0);
+              return dateB - dateA; // Newest first
+            case 'date-oldest':
+              const dateA2 = a.last_visit_date ? new Date(a.last_visit_date) : new Date(0);
+              const dateB2 = b.last_visit_date ? new Date(b.last_visit_date) : new Date(0);
+              return dateA2 - dateB2; // Oldest first
+            default:
+              return 0;
+          }
+        });
+      }
+      
+      displayCustomers(filteredCustomers);
+    }
+
+    function modifyCustomer(customerId) {
+      openEditCustomerModal(customerId);
+    }
+
+    async function openEditCustomerModal(customerId) {
+      try {
+        // Fetch the latest customer data from the server
+        const response = await fetch(`/api/customers/${customerId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch customer data');
+        }
+        
+        const customer = await response.json();
+        
+        // Populate the form with current customer data
+        document.getElementById('editCustomerId').value = customer.customer_id;
+        document.getElementById('editFirstName').value = customer.first_name || '';
+        document.getElementById('editLastName').value = customer.last_name || '';
+        document.getElementById('editPhone').value = customer.phone || '';
+        document.getElementById('editEmail').value = customer.email || '';
+        document.getElementById('editAddress').value = customer.address || '';
+        document.getElementById('editCity').value = customer.city || '';
+        document.getElementById('editState').value = customer.state || '';
+        document.getElementById('editZip').value = customer.zip || '';
+        
+        // Show the modal
+        document.getElementById('editCustomerModal').style.display = 'block';
+      } catch (error) {
+        console.error('Error loading customer data:', error);
+        alert('Error loading customer data. Please try again.');
+      }
+    }
+
+    function closeEditCustomerModal() {
+      document.getElementById('editCustomerModal').style.display = 'none';
+      document.getElementById('editCustomerForm').reset();
+    }
+
+    function deleteCustomer(customerId) {
+      const customer = allCustomers.find(c => c.customer_id === customerId);
+      if (!customer) {
+        alert('Customer not found');
+        return;
+      }
+
+      const confirmDelete = confirm(`Are you sure you want to delete customer ${customer.first_name} ${customer.last_name}?\n\nThis action cannot be undone.`);
+      if (confirmDelete) {
+        // Send delete request to server
+        fetch(`/api/customers/${customerId}`, {
+          method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.message && data.message.includes('deleted')) {
+            alert('Customer deleted successfully!');
+            // Reload the customer list
+            loadCustomers();
+          } else {
+            alert('Error deleting customer: ' + (data.error || data.message || 'Unknown error'));
+          }
+        })
+        .catch(error => {
+          console.error('Error deleting customer:', error);
+          alert('Error deleting customer. Please try again.');
+        });
+      }
+    }
+  </script>
+
+  <style>
+    #customerTable {
+      width: 100%;
+      margin-top: 20px;
+    }
+    
+    #customerTable th,
+    #customerTable td {
+      text-align: left;
+      padding: 12px 8px;
+      border-bottom: 1px solid #dee2e6;
+    }
+    
+    #customerTable tbody tr:hover {
+      background-color: #f8f9fa;
+    }
+
+    .modify-customer-btn {
+      background-color: #ff8c00 !important;
+      color: white !important;
+      border: none !important;
+      border-radius: 4px !important;
+      cursor: pointer !important;
+      font-weight: 500 !important;
+    }
+
+    .modify-customer-btn:hover {
+      background-color: #e67e00 !important;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: 5% auto;
+      padding: 0;
+      border: 1px solid #888;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-header {
+      background-color: #f8f9fa;
+      padding: 15px 20px;
+      border-bottom: 1px solid #dee2e6;
+      border-radius: 8px 8px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      color: #333;
+    }
+
+    .close {
+      color: #aaa;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: #000;
+      text-decoration: none;
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .form-group {
+      flex: 1;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #dee2e6;
+    }
+
+    .cancel-btn {
+      padding: 8px 16px;
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .cancel-btn:hover {
+      background-color: #5a6268;
+    }
+
+    .save-btn {
+      padding: 8px 16px;
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .save-btn:hover {
+      background-color: #218838;
+    }
+  </style>
+</body>
+</html>

@@ -1,16 +1,25 @@
 {
-  "main": "index.js",
-  "type": "module",
+  "name": "iwood-slim-local-app",
+  "version": "1.0.0",
+  "description": "iWood Slim Local Application - Inventory and Order Management System",
+  "main": "dist/index.js",
+  "bin": "dist/index.js",
   "scripts": {
     "build": "npx tsc",
-    "start": "node --experimental-loader=extensionless --es-module-specifier-resolution=node --no-warnings ./dist/index.js",
+    "start": "node ./dist/index.js",
     "compile": "npm run clean && npx tsc --watch",
     "clean": "rimraf ./dist/",
-    "start-dev": "node --experimental-loader=extensionless --es-module-specifier-resolution=node --no-warnings --watch ./dist/index.js",
+    "start-dev": "node --watch ./dist/index.js",
     "start-dev-browserSync": "node --no-warnings --watch bsync.mjs",
     "start-dev-ui": "concurrently -c cyan,green -n server,browserSync \"npm:start-dev\" \"npm:start-dev-browserSync\"",
-    "start-once": "node --experimental-loader=extensionless --es-module-specifier-resolution=node --no-warnings ./dist/index.js",
-    "lint": "eslint . --ext .ts"
+    "start-once": "node ./dist/index.js",
+    "lint": "eslint . --ext .ts",
+    "package": "npm run build && pkg . --out-path build",
+    "package-win": "npm run build && pkg . --targets node18-win-x64 --out-path build",
+    "package-all": "npm run build && pkg . --targets node18-win-x64,node18-linux-x64,node18-macos-x64 --out-path build",
+    "dist": "npm run package-win && npm run copy-assets",
+    "copy-assets": "powershell -Command \"Copy-Item public build\\public -Recurse -Force; Copy-Item views build\\views -Recurse -Force; Copy-Item .env build\\.env -Force; Copy-Item *.sql build\\ -Force; Copy-Item DEPLOYMENT_GUIDE.md build\\ -Force; Copy-Item INSTALLATION.md build\\ -Force; Copy-Item README.md build\\ -Force; Copy-Item LICENSE build\\ -Force; Copy-Item start-iwood.bat build\\ -Force\"",
+    "release": "npm run dist && powershell -Command \"Compress-Archive -Path 'build\\*' -DestinationPath 'iwood-slim-local-app-windows.zip' -Force\""
   },
   "devDependencies": {
     "@types/ejs": "^3.1.5",
@@ -52,5 +61,19 @@
     "picocolors": "^1.1.1",
     "reflect-metadata": "^0.2.2",
     "typeorm": "0.3.22"
+  },
+  "pkg": {
+    "scripts": "dist/**/*.js",
+    "assets": [
+      "public/**/*",
+      "views/**/*",
+      ".env"
+    ],
+    "targets": [
+      "node18-win-x64",
+      "node18-linux-x64",
+      "node18-macos-x64"
+    ],
+    "outputPath": "build"
   }
 }

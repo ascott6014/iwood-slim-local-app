@@ -1,4 +1,4 @@
-import { db } from "../dataSource";
+const { db } = require("../dataSource");
 
 // Get all customers with their most recent visit information
 export async function getCustomersWithRecentVisits(): Promise<any[]> {

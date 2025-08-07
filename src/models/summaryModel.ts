@@ -1,4 +1,4 @@
-import { db } from "../dataSource";
+const { db } = require("../dataSource");
 
 
 export async function getOrderSummaries(customerId?: number): Promise<OrderSummary[]> {

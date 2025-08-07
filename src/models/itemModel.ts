@@ -1,4 +1,4 @@
-import { db } from "../dataSource";
+const { db } = require("../dataSource");
 
 export async function searchItems(query: string): Promise<Item[]> {
   const like = `%${query}%`;
